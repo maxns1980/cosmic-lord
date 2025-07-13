@@ -4,7 +4,6 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
-import { ServerResponse } from 'http';
 import { connectDB, db } from './config/db';
 import userRoutes from './routes/userRoutes';
 import allianceRoutes from './routes/allianceRoutes';
@@ -43,8 +42,11 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+// --- API Routes ---
 app.use('/api/users', userRoutes);
 app.use('/api/alliances', allianceRoutes);
+
 
 const checkRequirements = (
     requirements: Partial<BuildingLevels & ResearchLevels> | undefined, 
@@ -484,20 +486,25 @@ app.post('/api/fleet/send', protect, async (req: Request, res: Response) => {
 });
 
 // --- Static File Serving ---
-const projectRoot = path.join(__dirname, '..', '..');
+const projectRoot = path.resolve(__dirname, '..', '..');
 
-// Serve files from the root directory, setting the correct Content-Type for TSX files.
 app.use(express.static(projectRoot, {
-  setHeaders: (res: ServerResponse, filePath: string) => {
+  setHeaders: (res: Response, filePath: string) => {
     if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
-      res.setHeader('Content-Type', 'text/babel; charset=UTF-8');
+      res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
     }
   }
 }));
 
-// Fallback for client-side routing. This MUST be the last route.
 app.get('*', (req: Request, res: Response) => {
-    res.sendFile(path.join(projectRoot, 'index.html'));
+    // This is a crucial change. Do NOT serve index.html for requests that look like files.
+    // This prevents the "Unexpected token '<'" error when a script isn't found by express.static.
+    if (req.path.includes('.') || req.path.startsWith('/api/')) {
+        res.status(404).end();
+    } else {
+        // This is the fallback for client-side routing (e.g. /buildings, /fleet)
+        res.sendFile(path.join(projectRoot, 'index.html'));
+    }
 });
 
 const masterGameLoop = async () => {
