@@ -488,24 +488,24 @@ app.post('/api/fleet/send', protect, async (req: Request, res: Response) => {
 // --- Static File Serving ---
 const projectRoot = path.resolve(__dirname, '..', '..');
 
+// Serve static files from the project root.
+// This handles requests for files like index.css, index.tsx, etc.
 app.use(express.static(projectRoot, {
   setHeaders: (res: Response, filePath: string) => {
-    if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
-      res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+    // Set the correct Content-Type for .tsx files so Babel can transpile them
+    if (filePath.endsWith('.tsx')) {
+      res.setHeader('Content-Type', 'text/babel; charset=UTF-8');
     }
   }
 }));
 
+// Fallback for client-side routing. This MUST be after API and static routes.
+// It serves the main HTML file for any non-API, non-file request, allowing
+// React Router (or in this case, our view state) to handle the URL.
 app.get('*', (req: Request, res: Response) => {
-    // This is a crucial change. Do NOT serve index.html for requests that look like files.
-    // This prevents the "Unexpected token '<'" error when a script isn't found by express.static.
-    if (req.path.includes('.') || req.path.startsWith('/api/')) {
-        res.status(404).end();
-    } else {
-        // This is the fallback for client-side routing (e.g. /buildings, /fleet)
-        res.sendFile(path.join(projectRoot, 'index.html'));
-    }
+  res.sendFile(path.join(projectRoot, 'index.html'));
 });
+
 
 const masterGameLoop = async () => {
     try {
