@@ -1,6 +1,6 @@
 /// <reference types="node" />
 
-import express, { Request, Response } from 'express';
+import express, { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -37,7 +37,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
 
-const app = express();
+const app: express.Express = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
@@ -220,7 +220,7 @@ const updatePlayerState = async (userId: ObjectId) => {
 };
 
 
-app.get('/api/state', protect, async (req: Request, res: Response) => {
+app.get('/api/state', protect, async (req: ExpressRequest, res: ExpressResponse) => {
     try {
         const user = req.user!;
         await updatePlayerState(user._id);
@@ -296,7 +296,7 @@ app.get('/api/state', protect, async (req: Request, res: Response) => {
     }
 });
 
-app.get('/api/galaxy/:galaxy/:system', protect, async (req: Request, res: Response) => {
+app.get('/api/galaxy/:galaxy/:system', protect, async (req: ExpressRequest, res: ExpressResponse) => {
     const { galaxy, system } = req.params;
     const g = parseInt(galaxy);
     const s = parseInt(system);
@@ -346,7 +346,7 @@ app.get('/api/galaxy/:galaxy/:system', protect, async (req: Request, res: Respon
 });
 
 
-app.get('/api/rankings', protect, async (req: Request, res: Response) => {
+app.get('/api/rankings', protect, async (req: ExpressRequest, res: ExpressResponse) => {
     try {
         const users = db.collection<User>('users');
         const rankings = await users
@@ -371,7 +371,7 @@ app.get('/api/rankings', protect, async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/queue/add', protect, async (req: Request, res: Response) => {
+app.post('/api/queue/add', protect, async (req: ExpressRequest, res: ExpressResponse) => {
     try {
         const user = req.user!;
         const { planetId, id, type, amount = 1 } = req.body;
@@ -431,7 +431,7 @@ app.post('/api/queue/add', protect, async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/fleet/send', protect, async (req: Request, res: Response) => {
+app.post('/api/fleet/send', protect, async (req: ExpressRequest, res: ExpressResponse) => {
     try {
         const user = req.user!;
         const { originPlanetId, missionFleet, targetCoords, missionType } = req.body;
@@ -486,26 +486,28 @@ app.post('/api/fleet/send', protect, async (req: Request, res: Response) => {
 });
 
 // --- Static File Serving ---
-const projectRoot = path.resolve(__dirname, '..', '..');
+// The CWD will be 'backend' due to Render's settings. We need to go up one level.
+const projectRoot = path.resolve((process as any).cwd(), '..');
 
-// Serve static files from the project root.
-// This handles requests for files like index.css, index.tsx, etc.
+// Serve static files from the project root directory
 app.use(express.static(projectRoot, {
-  setHeaders: (res: Response, filePath: string) => {
-    // Set the correct Content-Type for .tsx files so Babel can transpile them
-    if (filePath.endsWith('.tsx')) {
-      res.setHeader('Content-Type', 'text/babel; charset=UTF-8');
+    setHeaders: (res, filePath) => {
+        if (path.extname(filePath) === '.tsx' || path.extname(filePath) === '.ts') {
+            (res as ExpressResponse).setHeader('Content-Type', 'text/babel; charset=UTF-8');
+        }
     }
-  }
 }));
 
-// Fallback for client-side routing. This MUST be after API and static routes.
-// It serves the main HTML file for any non-API, non-file request, allowing
-// React Router (or in this case, our view state) to handle the URL.
-app.get('*', (req: Request, res: Response) => {
-  res.sendFile(path.join(projectRoot, 'index.html'));
+// The SPA fallback. This should be the LAST route.
+app.get('*', (req: ExpressRequest, res: ExpressResponse) => {
+    // If the request has a file extension, it's likely a missing asset.
+    if (path.extname(req.path)) {
+        res.status(404).send('Not Found');
+    } else {
+        // Otherwise, serve the main HTML file for client-side routing.
+        res.sendFile(path.join(projectRoot, 'index.html'));
+    }
 });
-
 
 const masterGameLoop = async () => {
     try {
@@ -530,7 +532,7 @@ const startServer = async () => {
         });
     } catch (error) {
         console.error("Failed to start server:", error);
-        process.exit(1);
+        (process as any).exit(1);
     }
 };
 
