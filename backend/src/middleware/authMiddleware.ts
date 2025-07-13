@@ -1,14 +1,13 @@
 import jwt from 'jsonwebtoken';
-import { Response, NextFunction } from 'express';
 import { db } from '../config/db';
-import { User, AuthRequest } from '../types';
+import { User } from '../types';
 import { ObjectId } from 'mongodb';
 
 interface JwtPayload {
     id: string;
 }
 
-export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const protect = async (req, res, next) => {
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -31,11 +30,9 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
             next();
         } catch (error) {
             console.error(error);
-            res.status(401).json({ message: 'Not authorized, token failed' });
+            return res.status(401).json({ message: 'Not authorized, token failed' });
         }
-    }
-
-    if (!token) {
-        res.status(401).json({ message: 'Not authorized, no token' });
+    } else {
+        return res.status(401).json({ message: 'Not authorized, no token' });
     }
 };

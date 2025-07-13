@@ -423,7 +423,57 @@ export interface PlayerRank {
     rank: number;
     username: string;
     points: number;
+    allianceTag?: string;
 }
+
+// --- Alliance Types ---
+export interface AllianceMember {
+    userId: ObjectId;
+    username: string;
+    points: number;
+}
+
+export interface AllianceChatMessage {
+    _id: ObjectId;
+    allianceId: ObjectId;
+    userId: ObjectId;
+    username: string;
+    message: string;
+    timestamp: number;
+}
+
+export interface Alliance {
+    _id: ObjectId;
+    name: string;
+    tag: string;
+    leaderId: ObjectId;
+    members: AllianceMember[];
+}
+
+export interface AllianceMemberFE {
+    userId: string;
+    username: string;
+    points: number;
+}
+
+export interface AllianceChatMessageFE {
+    id: string;
+    allianceId: string;
+    userId: string;
+    username: string;
+    message: string;
+    timestamp: number;
+}
+
+export interface AllianceFE {
+    id: string;
+    name: string;
+    tag: string;
+    leaderId: string;
+    members: AllianceMemberFE[];
+    chat?: AllianceChatMessageFE[];
+}
+
 
 // --- Main Database Schemas ---
 export interface Planet {
@@ -453,13 +503,13 @@ export interface User {
     activeBoosts: ActiveBoosts;
     lastActivity: Date;
     points: number;
+    allianceId?: ObjectId;
+    allianceTag?: string;
     resourceVeinBonus?: ResourceVeinBonus; 
 }
 
 // --- Custom Request for Auth Middleware ---
-export interface AuthRequest extends Request {
-    user?: User; // Add the user property to the Request type
-}
+// Now handled via declaration merging below
 
 
 export type PlanetFE = {
@@ -485,6 +535,7 @@ export type GameState = {
     credits: number;
     inventory: Inventory;
     activeBoosts: ActiveBoosts;
+    alliance?: AllianceFE;
     
     // Per-planet state
     planets: PlanetFE[];
@@ -498,8 +549,6 @@ export type GameState = {
     resourceVeinBonus: ResourceVeinBonus;
     ancientArtifactState: AncientArtifactState;
     spacePlague: SpacePlagueState;
-    // npcStates: NPCStates;
-    // debrisFields: Record<string, DebrisField>;
 };
 
 export interface GalaxyViewObject {
@@ -508,4 +557,15 @@ export interface GalaxyViewObject {
     name?: string; // planet name
     username?: string; // player name
     debris?: DebrisField;
+    allianceId?: string;
+    allianceTag?: string;
+}
+
+// Augment Express Request type
+declare global {
+    namespace Express {
+        export interface Request {
+            user?: User;
+        }
+    }
 }

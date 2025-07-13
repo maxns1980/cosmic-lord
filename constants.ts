@@ -1,7 +1,8 @@
 
 
-
 import { BuildingType, ResearchType, ShipType, DefenseType, Resources, BuildingLevels, ResearchLevels, Fleet, Defenses, BuildingCategory, MerchantState, MerchantStatus, NPCState, NPCFleetMission, ShipLevels, DebrisField, PirateMercenaryState, PirateMercenaryStatus, ResourceVeinBonus, AncientArtifactState, AncientArtifactStatus, SpacePlagueState, CombatStats, Inventory, ActiveBoosts, Planet } from './types';
+
+export const API_URL = 'https://cosmic-lord-backend.onrender.com'; // <-- PASTE YOUR RENDER URL HERE
 
 export const TICK_INTERVAL = 1000; // ms
 export const BASE_STORAGE_CAPACITY = 10000;

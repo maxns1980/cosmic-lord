@@ -1,15 +1,23 @@
 
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { MissionType, DebrisField, Planet, GalaxyPlanet } from '../types';
+import { MissionType, DebrisField, Planet, GalaxyPlanet, Alliance } from '../types';
 
 interface GalaxyPanelProps {
     onAction: (targetCoords: string, missionType: MissionType) => void;
     colonies: Planet[];
     token: string | null;
+    playerAlliance: Alliance | undefined;
 }
 
 const formatNumber = (num: number) => Math.floor(num).toLocaleString('pl-PL');
+
+const getPlayerRelationClass = (planetData: GalaxyPlanet, playerAllianceId: string | undefined): string => {
+    if (!planetData.username || !playerAllianceId) return 'text-red-400'; // Neutral/Enemy
+    if (planetData.allianceId === playerAllianceId) return 'text-green-400'; // Ally
+    // Future: Add logic for allied alliances
+    return 'text-red-400'; // Neutral/Enemy
+}
 
 const getPlanetImage = (username?: string) => {
     if (!username) return '⚫'; // Empty space
@@ -21,7 +29,7 @@ const getPlanetImage = (username?: string) => {
     return '🪐'; // Temperate
 }
 
-const GalaxyPanel: React.FC<GalaxyPanelProps> = ({ onAction, colonies, token }) => {
+const GalaxyPanel: React.FC<GalaxyPanelProps> = ({ onAction, colonies, token, playerAlliance }) => {
     const [galaxy, setGalaxy] = useState(1);
     const [system, setSystem] = useState(42);
     const [systemData, setSystemData] = useState<GalaxyPlanet[]>([]);
@@ -105,8 +113,11 @@ const GalaxyPanel: React.FC<GalaxyPanelProps> = ({ onAction, colonies, token }) 
                                 <span className="text-4xl mr-4 w-10 text-center">{getPlanetImage(data?.username)}</span>
                                 <div className="flex-1">
                                     <p className="text-lg text-white">Pozycja {position} [{coords}]</p>
-                                    {data?.type === 'player' ? (
-                                        <p className="text-sm text-gray-400">Gracz: <span className={isMyPlanet ? 'text-cyan-300' : 'text-red-400'}>{data.username}</span></p>
+                                    {data?.type === 'player' && data.username ? (
+                                        <p className="text-sm text-gray-400">
+                                            Gracz: <span className={isMyPlanet ? 'text-cyan-300' : getPlayerRelationClass(data, playerAlliance?.id)}>{data.username}</span>
+                                            {data.allianceTag && <span className={`ml-2 ${getPlayerRelationClass(data, playerAlliance?.id)}`}>[{data.allianceTag}]</span>}
+                                        </p>
                                     ) : (
                                         <p className="text-sm text-gray-500">[Pusta Przestrzeń]</p>
                                     )}

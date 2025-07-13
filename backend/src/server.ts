@@ -1,15 +1,14 @@
-
-
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB, db } from './config/db';
 import userRoutes from './routes/userRoutes';
+import allianceRoutes from './routes/allianceRoutes';
 import { protect } from './middleware/authMiddleware';
 import { 
     GameState, FleetMission, Message, GameObject, QueueItemType, QueueItem, 
     BuildingType, ResearchType, ShipType, DefenseType, BuildingLevels, ResearchLevels, ShipLevels, BoostType, Fleet, MissionType, BattleReport, SpyReport, DebrisField, NPCState, BattleMessage, SpyMessage, NPCPersonality, ExpeditionMessage, Resources, ColonizationMessage, ExplorationMessage,
-    User, Planet, PlayerRank, AuthRequest, GalaxyViewObject
+    User, Planet, PlayerRank, GalaxyViewObject, Alliance, AllianceFE, AllianceChatMessage
 } from './types';
 import { 
     INITIAL_MERCHANT_STATE,
@@ -41,6 +40,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use('/api/users', userRoutes);
+app.use('/api/alliances', allianceRoutes);
 
 const checkRequirements = (
     requirements: Partial<BuildingLevels & ResearchLevels> | undefined, 
@@ -211,13 +211,47 @@ const updatePlayerState = async (userId: ObjectId) => {
 };
 
 
-app.get('/api/state', protect, async (req: AuthRequest, res: Response) => {
+app.get('/api/state', protect, async (req, res) => {
     try {
         const user = req.user!;
         await updatePlayerState(user._id);
 
         const updatedUser = await db.collection<User>('users').findOne({ _id: user._id });
         if (!updatedUser) return res.status(404).json({ message: "User not found after update." });
+        
+        let allianceData: Alliance | undefined;
+        if (updatedUser.allianceId) {
+            allianceData = await db.collection<Alliance>('alliances').findOne({ _id: updatedUser.allianceId }) || undefined;
+        }
+
+        let feAlliance: AllianceFE | undefined;
+        if (allianceData) {
+            const allianceChatMessages = await db.collection<AllianceChatMessage>('alliance_chats')
+                .find({ allianceId: allianceData._id })
+                .sort({ timestamp: -1 })
+                .limit(50)
+                .toArray();
+
+            feAlliance = {
+                id: allianceData._id.toHexString(),
+                name: allianceData.name,
+                tag: allianceData.tag,
+                leaderId: allianceData.leaderId.toHexString(),
+                members: allianceData.members.map(m => ({
+                    userId: m.userId.toHexString(),
+                    username: m.username,
+                    points: m.points,
+                })),
+                chat: allianceChatMessages.reverse().map(m => ({
+                    id: m._id.toHexString(),
+                    allianceId: m.allianceId.toHexString(),
+                    userId: m.userId.toHexString(),
+                    username: m.username,
+                    message: m.message,
+                    timestamp: m.timestamp
+                }))
+            };
+        }
         
         const userPlanets = await db.collection<Planet>('planets').find({ userId: updatedUser._id }).toArray();
         const fleetMissionsDocs = await db.collection<FleetMission>('fleet_missions').find({ ownerId: updatedUser._id }).toArray();
@@ -230,6 +264,7 @@ app.get('/api/state', protect, async (req: AuthRequest, res: Response) => {
             credits: updatedUser.credits,
             inventory: updatedUser.inventory,
             activeBoosts: updatedUser.activeBoosts,
+            alliance: feAlliance,
             planets: userPlanets.map(p => ({
                 id: p._id.toString(), name: p.name, coordinates: p.coordinates, isHomeworld: p.isHomeworld,
                 resources: p.resources, buildings: p.buildings, fleet: p.fleet, defenses: p.defenses,
@@ -252,7 +287,7 @@ app.get('/api/state', protect, async (req: AuthRequest, res: Response) => {
     }
 });
 
-app.get('/api/galaxy/:galaxy/:system', protect, async (req: AuthRequest, res: Response) => {
+app.get('/api/galaxy/:galaxy/:system', protect, async (req, res) => {
     const { galaxy, system } = req.params;
     const g = parseInt(galaxy);
     const s = parseInt(system);
@@ -266,11 +301,10 @@ app.get('/api/galaxy/:galaxy/:system', protect, async (req: AuthRequest, res: Re
             coordinates: { $regex: `^${g}:${s}:` }
         }).toArray();
 
-        const usersInSystem = await db.collection<User>('users').find({
-            _id: { $in: planetsInSystem.map(p => p.userId) }
-        }).project({ username: 1 }).toArray();
-
-        const userMap = new Map(usersInSystem.map(u => [u._id.toHexString(), u.username]));
+        const userIds = planetsInSystem.map(p => p.userId);
+        const usersInSystem = await db.collection<User>('users').find({ _id: { $in: userIds } }).project({ username: 1, allianceId: 1, allianceTag: 1 }).toArray();
+        
+        const userMap = new Map(usersInSystem.map(u => [u._id.toHexString(), u]));
 
         const galaxyView: GalaxyViewObject[] = Array.from({ length: 15 }, (_, i) => {
             const position = i + 1;
@@ -278,12 +312,14 @@ app.get('/api/galaxy/:galaxy/:system', protect, async (req: AuthRequest, res: Re
             const planetDoc = planetsInSystem.find(p => p.coordinates === coords);
 
             if (planetDoc) {
+                const owner = userMap.get(planetDoc.userId.toHexString());
                 return {
                     coordinates: coords,
                     type: 'player',
                     name: planetDoc.name,
-                    username: userMap.get(planetDoc.userId.toHexString()),
-                    // Add debris field info here if needed
+                    username: owner?.username,
+                    allianceId: owner?.allianceId?.toHexString(),
+                    allianceTag: owner?.allianceTag
                 };
             }
             return {
@@ -301,20 +337,21 @@ app.get('/api/galaxy/:galaxy/:system', protect, async (req: AuthRequest, res: Re
 });
 
 
-app.get('/api/rankings', protect, async (req: AuthRequest, res: Response) => {
+app.get('/api/rankings', protect, async (req, res) => {
     try {
         const users = db.collection<User>('users');
         const rankings = await users
             .find({})
             .sort({ points: -1 })
             .limit(100)
-            .project({ username: 1, points: 1 })
+            .project({ username: 1, points: 1, allianceTag: 1 })
             .toArray();
 
         const playerRanks: PlayerRank[] = rankings.map((user, index) => ({
             rank: index + 1,
             username: user.username,
             points: Math.floor(user.points),
+            allianceTag: user.allianceTag,
         }));
 
         res.json(playerRanks);
@@ -324,7 +361,7 @@ app.get('/api/rankings', protect, async (req: AuthRequest, res: Response) => {
     }
 });
 
-app.post('/api/queue/add', protect, async (req: AuthRequest, res: Response) => {
+app.post('/api/queue/add', protect, async (req, res) => {
     try {
         const user = req.user!;
         const { planetId, id, type, amount = 1 } = req.body;
@@ -384,7 +421,7 @@ app.post('/api/queue/add', protect, async (req: AuthRequest, res: Response) => {
     }
 });
 
-app.post('/api/fleet/send', protect, async (req: AuthRequest, res: Response) => {
+app.post('/api/fleet/send', protect, async (req, res) => {
     try {
         const user = req.user!;
         const { originPlanetId, missionFleet, targetCoords, missionType } = req.body;
@@ -441,7 +478,7 @@ app.post('/api/fleet/send', protect, async (req: AuthRequest, res: Response) => 
 // Add other endpoints like /api/merchant/trade and /api/inventory/activate here,
 // making sure they are protected by `protect` middleware.
 
-app.get('/', (req: Request, res: Response) => res.send('Cosmic Lord Backend is running!'));
+app.get('/', (req, res) => res.send('Cosmic Lord Backend is running!'));
 
 const masterGameLoop = async () => {
     try {

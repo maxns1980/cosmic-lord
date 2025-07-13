@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
     BuildingType, Resources, BuildingLevels, ResearchLevels, ResearchType, Fleet, QueueItem, QueueItemType, GameObject, 
@@ -6,7 +7,7 @@ import {
     MerchantState, MerchantStatus, View, ShipLevels, DebrisField,
     PirateMercenaryState, AncientArtifactStatus, AncientArtifactChoice,
     Inventory, ActiveBoosts, BoostType, Boost, 
-    GameState, Planet
+    GameState, Planet, Alliance
 } from './types';
 import { 
     ALL_GAME_OBJECTS, BUILDING_DATA
@@ -31,6 +32,7 @@ import InventoryModal from './components/InventoryModal';
 import { calculateMaxResources } from './src/utils/gameLogic';
 import RankingsPanel from './components/RankingsPanel';
 import Auth from './components/Auth';
+import AlliancePanel from './components/AlliancePanel';
 
 function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
@@ -115,6 +117,10 @@ function App() {
       setGameState(null);
       setCurrentPlanetId(null);
       setActiveView('buildings');
+  }
+  
+  const handleUpdateAlliance = (alliance: Alliance | undefined) => {
+      setGameState(prev => prev ? ({ ...prev, alliance }) : null);
   }
 
   // Effect for fetching state from server on initial load or token change
@@ -365,10 +371,11 @@ const handleActivateBoost = useCallback(async (boostId: string) => {
                 {activeView === 'shipyard' && <ShipyardPanel buildings={currentPlanet.buildings} research={gameState.research} resources={currentPlanet.resources} onBuild={(type, amount) => handleAddToQueue(type, 'ship', amount)} buildQueue={currentPlanet.buildQueue} fleet={currentPlanet.fleet} />}
                 {activeView === 'defense' && <DefensePanel buildings={currentPlanet.buildings} research={gameState.research} resources={currentPlanet.resources} onBuild={(type, amount) => handleAddToQueue(type, 'defense', amount)} buildQueue={currentPlanet.buildQueue} defenses={currentPlanet.defenses} />}
                 {activeView === 'fleet' && <FleetPanel fleet={currentPlanet.fleet} fleetMissions={gameState.fleetMissions} onSendFleet={handleSendFleet} research={gameState.research} initialTarget={fleetTarget} onClearInitialTarget={() => setFleetTarget(null)} spacePlague={gameState.spacePlague} colonies={gameState.planets} />}
-                {activeView === 'galaxy' && <GalaxyPanel onAction={handleActionFromGalaxy} colonies={gameState.planets} token={token} />}
+                {activeView === 'galaxy' && <GalaxyPanel onAction={handleActionFromGalaxy} colonies={gameState.planets} token={token} playerAlliance={gameState.alliance} />}
                 {activeView === 'messages' && <MessagesPanel messages={gameState.messages} onRead={handleMarkAsRead} onDelete={handleDeleteMessage} onDeleteAll={handleDeleteAllMessages} />}
                 {activeView === 'merchant' && gameState.merchantState.status === MerchantStatus.ACTIVE && <MerchantPanel merchantState={gameState.merchantState} resources={currentPlanet.resources} credits={gameState.credits} maxResources={calculateMaxResources(currentPlanet.buildings)} onTrade={handleTrade} />}
-                {activeView === 'rankings' && <RankingsPanel currentPlayerUsername={gameState.username} />}
+                {activeView === 'rankings' && <RankingsPanel currentPlayerUsername={gameState.username} playerAlliance={gameState.alliance} />}
+                {activeView === 'alliance' && <AlliancePanel alliance={gameState.alliance} onUpdateAlliance={handleUpdateAlliance} />}
             </div>
            <footer className="text-center text-gray-500 mt-12 pb-4">
               <p>Kosmiczny Władca - Inspirowane OGame</p>

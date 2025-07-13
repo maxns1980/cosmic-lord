@@ -1,6 +1,6 @@
 
 
-export type View = 'buildings' | 'research' | 'shipyard' | 'defense' | 'fleet' | 'messages' | 'merchant' | 'galaxy' | 'fleet_upgrades' | 'rankings';
+export type View = 'buildings' | 'research' | 'shipyard' | 'defense' | 'fleet' | 'messages' | 'merchant' | 'galaxy' | 'fleet_upgrades' | 'rankings' | 'alliance';
 
 export enum BuildingType {
   METAL_MINE = 'METAL_MINE',
@@ -482,6 +482,7 @@ export interface PlayerRank {
     rank: number;
     username: string;
     points: number;
+    allianceTag?: string;
 }
 
 export interface GalaxyPlanet {
@@ -490,6 +491,33 @@ export interface GalaxyPlanet {
     name?: string;
     username?: string;
     debris?: DebrisField;
+    allianceId?: string;
+    allianceTag?: string;
+}
+
+// --- Alliance Types ---
+export interface AllianceMember {
+    userId: string;
+    username: string;
+    points: number;
+}
+
+export interface AllianceChatMessageFE {
+    id: string;
+    allianceId: string;
+    userId: string;
+    username: string;
+    message: string;
+    timestamp: number;
+}
+
+export interface Alliance {
+    id: string;
+    name: string;
+    tag: string;
+    leaderId: string;
+    members: AllianceMember[];
+    chat?: AllianceChatMessageFE[];
 }
 
 
@@ -503,6 +531,7 @@ export type GameState = {
     credits: number;
     inventory: Inventory;
     activeBoosts: ActiveBoosts;
+    alliance?: Alliance;
     
     // Per-planet state
     planets: Planet[];
@@ -516,7 +545,4 @@ export type GameState = {
     resourceVeinBonus: ResourceVeinBonus;
     ancientArtifactState: AncientArtifactState;
     spacePlague: SpacePlagueState;
-    // These are no longer needed on the client, the galaxy view fetches its own data
-    // npcStates: NPCStates;
-    // debrisFields: Record<string, DebrisField>;
 };
