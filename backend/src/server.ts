@@ -1,5 +1,6 @@
 
-import express, { Request as ExpressRequest, Response as ExpressResponse } from 'express';
+
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB, db } from './config/db';
@@ -210,7 +211,7 @@ const updatePlayerState = async (userId: ObjectId) => {
 };
 
 
-app.get('/api/state', protect, async (req: AuthRequest, res: ExpressResponse) => {
+app.get('/api/state', protect, async (req: AuthRequest, res: Response) => {
     try {
         const user = req.user!;
         await updatePlayerState(user._id);
@@ -251,7 +252,7 @@ app.get('/api/state', protect, async (req: AuthRequest, res: ExpressResponse) =>
     }
 });
 
-app.get('/api/galaxy/:galaxy/:system', protect, async (req: AuthRequest, res: ExpressResponse) => {
+app.get('/api/galaxy/:galaxy/:system', protect, async (req: AuthRequest, res: Response) => {
     const { galaxy, system } = req.params;
     const g = parseInt(galaxy);
     const s = parseInt(system);
@@ -300,7 +301,7 @@ app.get('/api/galaxy/:galaxy/:system', protect, async (req: AuthRequest, res: Ex
 });
 
 
-app.get('/api/rankings', protect, async (req: AuthRequest, res: ExpressResponse) => {
+app.get('/api/rankings', protect, async (req: AuthRequest, res: Response) => {
     try {
         const users = db.collection<User>('users');
         const rankings = await users
@@ -323,7 +324,7 @@ app.get('/api/rankings', protect, async (req: AuthRequest, res: ExpressResponse)
     }
 });
 
-app.post('/api/queue/add', protect, async (req: AuthRequest, res: ExpressResponse) => {
+app.post('/api/queue/add', protect, async (req: AuthRequest, res: Response) => {
     try {
         const user = req.user!;
         const { planetId, id, type, amount = 1 } = req.body;
@@ -383,7 +384,7 @@ app.post('/api/queue/add', protect, async (req: AuthRequest, res: ExpressRespons
     }
 });
 
-app.post('/api/fleet/send', protect, async (req: AuthRequest, res: ExpressResponse) => {
+app.post('/api/fleet/send', protect, async (req: AuthRequest, res: Response) => {
     try {
         const user = req.user!;
         const { originPlanetId, missionFleet, targetCoords, missionType } = req.body;
@@ -440,7 +441,7 @@ app.post('/api/fleet/send', protect, async (req: AuthRequest, res: ExpressRespon
 // Add other endpoints like /api/merchant/trade and /api/inventory/activate here,
 // making sure they are protected by `protect` middleware.
 
-app.get('/', (req: ExpressRequest, res: ExpressResponse) => res.send('Cosmic Lord Backend is running!'));
+app.get('/', (req: Request, res: Response) => res.send('Cosmic Lord Backend is running!'));
 
 const masterGameLoop = async () => {
     try {

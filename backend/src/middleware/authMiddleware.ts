@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { Response as ExpressResponse, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { db } from '../config/db';
 import { User, AuthRequest } from '../types';
 import { ObjectId } from 'mongodb';
@@ -8,7 +8,7 @@ interface JwtPayload {
     id: string;
 }
 
-export const protect = async (req: AuthRequest, res: ExpressResponse, next: NextFunction) => {
+export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {

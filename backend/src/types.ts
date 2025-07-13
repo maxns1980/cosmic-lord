@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { Request as ExpressRequest } from 'express';
+import { Request } from 'express';
 
 export type View = 'buildings' | 'research' | 'shipyard' | 'defense' | 'fleet' | 'messages' | 'merchant' | 'galaxy' | 'fleet_upgrades';
 
@@ -457,7 +457,7 @@ export interface User {
 }
 
 // --- Custom Request for Auth Middleware ---
-export interface AuthRequest extends ExpressRequest {
+export interface AuthRequest extends Request {
     user?: User; // Add the user property to the Request type
 }
 
