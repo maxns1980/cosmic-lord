@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { db } from '../config/db';
@@ -49,7 +49,7 @@ const findEmptyPlanetSlot = async (): Promise<string | null> => {
 // @desc    Register a new user
 // @route   POST /api/users/register
 // @access  Public
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', async (req: express.Request, res: express.Response) => {
     const { username, email, password } = req.body;
 
     if (!username || !email || !password) {
@@ -121,7 +121,7 @@ router.post('/register', async (req: Request, res: Response) => {
 // @desc    Authenticate a user
 // @route   POST /api/users/login
 // @access  Public
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', async (req: express.Request, res: express.Response) => {
     const { username, password } = req.body;
     
     const usersCollection = db.collection<User>('users');

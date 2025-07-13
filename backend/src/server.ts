@@ -1,6 +1,6 @@
 /// <reference types="node" />
 
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -34,7 +34,6 @@ import { handleExpedition } from './utils/expeditionLogic';
 import { handleExploration } from './utils/explorationLogic';
 import { calculatePlayerPoints } from './utils/pointsLogic';
 import { v4 as uuidv4 } from 'uuid';
-import process from 'node:process';
 
 dotenv.config();
 
@@ -218,7 +217,7 @@ const updatePlayerState = async (userId: ObjectId) => {
 };
 
 
-app.get('/api/state', protect, async (req: Request, res: Response) => {
+app.get('/api/state', protect, async (req: express.Request, res: express.Response) => {
     try {
         const user = req.user!;
         await updatePlayerState(user._id);
@@ -294,7 +293,7 @@ app.get('/api/state', protect, async (req: Request, res: Response) => {
     }
 });
 
-app.get('/api/galaxy/:galaxy/:system', protect, async (req: Request, res: Response) => {
+app.get('/api/galaxy/:galaxy/:system', protect, async (req: express.Request, res: express.Response) => {
     const { galaxy, system } = req.params;
     const g = parseInt(galaxy);
     const s = parseInt(system);
@@ -344,7 +343,7 @@ app.get('/api/galaxy/:galaxy/:system', protect, async (req: Request, res: Respon
 });
 
 
-app.get('/api/rankings', protect, async (req: Request, res: Response) => {
+app.get('/api/rankings', protect, async (req: express.Request, res: express.Response) => {
     try {
         const users = db.collection<User>('users');
         const rankings = await users
@@ -369,7 +368,7 @@ app.get('/api/rankings', protect, async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/queue/add', protect, async (req: Request, res: Response) => {
+app.post('/api/queue/add', protect, async (req: express.Request, res: express.Response) => {
     try {
         const user = req.user!;
         const { planetId, id, type, amount = 1 } = req.body;
@@ -429,7 +428,7 @@ app.post('/api/queue/add', protect, async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/fleet/send', protect, async (req: Request, res: Response) => {
+app.post('/api/fleet/send', protect, async (req: express.Request, res: express.Response) => {
     try {
         const user = req.user!;
         const { originPlanetId, missionFleet, targetCoords, missionType } = req.body;
@@ -487,20 +486,34 @@ app.post('/api/fleet/send', protect, async (req: Request, res: Response) => {
 // making sure they are protected by `protect` middleware.
 
 // --- Static File Serving ---
-// Serve static files from the project root. The `setHeaders` option ensures
-// that .ts and .tsx files are served with the correct JavaScript MIME type,
-// allowing the in-browser Babel transpiler to process them.
-app.use(express.static(path.join(__dirname, '..', '..'), {
-    setHeaders: (res, filePath) => {
-        if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
-            res.setHeader('Content-Type', 'application/javascript');
-        }
+
+// For any GET request that ends in .ts or .tsx, we'll manually handle it.
+// This is to ensure the correct Content-Type is set for Babel to work.
+app.get(/\.(ts|tsx)$/, (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const filePath = path.join(__dirname, '..', '..', req.path);
+
+    // Basic security: ensure the resolved path is within the project root
+    const rootPath = path.resolve(__dirname, '..', '..');
+    if (!path.resolve(filePath).startsWith(rootPath)) {
+        return res.status(403).send("Forbidden");
     }
-}));
+
+    res.type('application/javascript'); // Babel needs a JS MIME type
+    res.sendFile(filePath, (err) => {
+        // If the file doesn't exist, pass control to the next handler
+        if (err) {
+            next();
+        }
+    });
+});
+
+
+// Serve other static files from the project root.
+app.use(express.static(path.join(__dirname, '..', '..')));
 
 // For any GET request that doesn't match an API route or a static file,
 // serve the main index.html file. This allows for client-side routing.
-app.get('*', (req: Request, res: Response) => {
+app.get('*', (req: express.Request, res: express.Response) => {
     // __dirname will be /backend/dist, so we go up two directories
     res.sendFile(path.join(__dirname, '..', '..', 'index.html'));
 });

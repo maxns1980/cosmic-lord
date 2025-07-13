@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import { db } from '../config/db';
 import { protect } from '../middleware/authMiddleware';
 import { Alliance, User, AllianceChatMessage, AllianceFE } from '../types';
@@ -9,7 +9,7 @@ const router = express.Router();
 // @desc    Create a new alliance
 // @route   POST /api/alliances/create
 // @access  Private
-router.post('/create', protect, async (req: Request, res: Response) => {
+router.post('/create', protect, async (req: express.Request, res: express.Response) => {
     const { name, tag } = req.body;
     const user = req.user!;
 
@@ -80,7 +80,7 @@ router.post('/create', protect, async (req: Request, res: Response) => {
 // @desc    Leave the current alliance
 // @route   POST /api/alliances/leave
 // @access  Private
-router.post('/leave', protect, async (req: Request, res: Response) => {
+router.post('/leave', protect, async (req: express.Request, res: express.Response) => {
     const user = req.user!;
     if (!user.allianceId) {
         return res.status(400).json({ message: "Nie należysz do żadnego sojuszu." });
@@ -127,7 +127,7 @@ router.post('/leave', protect, async (req: Request, res: Response) => {
 // @desc    Get alliance chat messages
 // @route   GET /api/alliances/chat
 // @access  Private
-router.get('/chat', protect, async (req: Request, res: Response) => {
+router.get('/chat', protect, async (req: express.Request, res: express.Response) => {
     const user = req.user!;
     if (!user.allianceId) {
         return res.status(400).json({ message: "Nie należysz do żadnego sojuszu." });
@@ -158,7 +158,7 @@ router.get('/chat', protect, async (req: Request, res: Response) => {
 // @desc    Send alliance chat message
 // @route   POST /api/alliances/chat
 // @access  Private
-router.post('/chat', protect, async (req: Request, res: Response) => {
+router.post('/chat', protect, async (req: express.Request, res: express.Response) => {
     const user = req.user!;
     const { message } = req.body;
 
