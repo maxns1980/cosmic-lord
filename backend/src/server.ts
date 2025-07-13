@@ -1,9 +1,10 @@
 /// <reference types="node" />
 
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import { ServerResponse } from 'http';
 import { connectDB, db } from './config/db';
 import userRoutes from './routes/userRoutes';
 import allianceRoutes from './routes/allianceRoutes';
@@ -217,7 +218,7 @@ const updatePlayerState = async (userId: ObjectId) => {
 };
 
 
-app.get('/api/state', protect, async (req: express.Request, res: express.Response) => {
+app.get('/api/state', protect, async (req: Request, res: Response) => {
     try {
         const user = req.user!;
         await updatePlayerState(user._id);
@@ -293,7 +294,7 @@ app.get('/api/state', protect, async (req: express.Request, res: express.Respons
     }
 });
 
-app.get('/api/galaxy/:galaxy/:system', protect, async (req: express.Request, res: express.Response) => {
+app.get('/api/galaxy/:galaxy/:system', protect, async (req: Request, res: Response) => {
     const { galaxy, system } = req.params;
     const g = parseInt(galaxy);
     const s = parseInt(system);
@@ -343,7 +344,7 @@ app.get('/api/galaxy/:galaxy/:system', protect, async (req: express.Request, res
 });
 
 
-app.get('/api/rankings', protect, async (req: express.Request, res: express.Response) => {
+app.get('/api/rankings', protect, async (req: Request, res: Response) => {
     try {
         const users = db.collection<User>('users');
         const rankings = await users
@@ -368,7 +369,7 @@ app.get('/api/rankings', protect, async (req: express.Request, res: express.Resp
     }
 });
 
-app.post('/api/queue/add', protect, async (req: express.Request, res: express.Response) => {
+app.post('/api/queue/add', protect, async (req: Request, res: Response) => {
     try {
         const user = req.user!;
         const { planetId, id, type, amount = 1 } = req.body;
@@ -428,7 +429,7 @@ app.post('/api/queue/add', protect, async (req: express.Request, res: express.Re
     }
 });
 
-app.post('/api/fleet/send', protect, async (req: express.Request, res: express.Response) => {
+app.post('/api/fleet/send', protect, async (req: Request, res: Response) => {
     try {
         const user = req.user!;
         const { originPlanetId, missionFleet, targetCoords, missionType } = req.body;
@@ -482,40 +483,21 @@ app.post('/api/fleet/send', protect, async (req: express.Request, res: express.R
     }
 });
 
-// Add other endpoints like /api/merchant/trade and /api/inventory/activate here,
-// making sure they are protected by `protect` middleware.
-
 // --- Static File Serving ---
+const projectRoot = path.join(__dirname, '..', '..');
 
-// For any GET request that ends in .ts or .tsx, we'll manually handle it.
-// This is to ensure the correct Content-Type is set for Babel to work.
-app.get(/\.(ts|tsx)$/, (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    const filePath = path.join(__dirname, '..', '..', req.path);
-
-    // Basic security: ensure the resolved path is within the project root
-    const rootPath = path.resolve(__dirname, '..', '..');
-    if (!path.resolve(filePath).startsWith(rootPath)) {
-        return res.status(403).send("Forbidden");
+// Serve files from the root directory, setting the correct Content-Type for TSX files.
+app.use(express.static(projectRoot, {
+  setHeaders: (res: ServerResponse, filePath: string) => {
+    if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
+      res.setHeader('Content-Type', 'text/babel; charset=UTF-8');
     }
+  }
+}));
 
-    res.type('application/javascript'); // Babel needs a JS MIME type
-    res.sendFile(filePath, (err) => {
-        // If the file doesn't exist, pass control to the next handler
-        if (err) {
-            next();
-        }
-    });
-});
-
-
-// Serve other static files from the project root.
-app.use(express.static(path.join(__dirname, '..', '..')));
-
-// For any GET request that doesn't match an API route or a static file,
-// serve the main index.html file. This allows for client-side routing.
-app.get('*', (req: express.Request, res: express.Response) => {
-    // __dirname will be /backend/dist, so we go up two directories
-    res.sendFile(path.join(__dirname, '..', '..', 'index.html'));
+// Fallback for client-side routing. This MUST be the last route.
+app.get('*', (req: Request, res: Response) => {
+    res.sendFile(path.join(projectRoot, 'index.html'));
 });
 
 const masterGameLoop = async () => {
@@ -537,7 +519,6 @@ const startServer = async () => {
         await connectDB();
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
-            // Run the loop only after the server has successfully started.
             setInterval(masterGameLoop, 15000); 
         });
     } catch (error) {
