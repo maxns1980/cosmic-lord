@@ -1,5 +1,5 @@
 
-import express from 'express';
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { db } from '../config/db';
 import { User } from '../types';
@@ -9,7 +9,7 @@ interface JwtPayload {
     id: string;
 }
 
-export const protect = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+export const protect = async (req: Request, res: Response, next: NextFunction) => {
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
