@@ -17,7 +17,8 @@
     "cors": "^2.8.5",
     "uuid": "^11.1.0",
     "jsonwebtoken": "^9.0.2",
-    "bcryptjs": "^3.0.2"
+    "bcryptjs": "^3.0.2",
+    "path": "^0.12.7"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

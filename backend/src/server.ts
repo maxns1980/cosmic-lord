@@ -1,8 +1,9 @@
 
 
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { connectDB, db } from './config/db';
 import userRoutes from './routes/userRoutes';
 import allianceRoutes from './routes/allianceRoutes';
@@ -36,7 +37,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
 
-const app: express.Application = express();
+const app: express.Express = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
@@ -216,7 +217,7 @@ const updatePlayerState = async (userId: ObjectId) => {
 };
 
 
-app.get('/api/state', protect, async (req: Request, res: Response) => {
+app.get('/api/state', protect, async (req: express.Request, res: express.Response) => {
     try {
         const user = req.user!;
         await updatePlayerState(user._id);
@@ -292,7 +293,7 @@ app.get('/api/state', protect, async (req: Request, res: Response) => {
     }
 });
 
-app.get('/api/galaxy/:galaxy/:system', protect, async (req: Request, res: Response) => {
+app.get('/api/galaxy/:galaxy/:system', protect, async (req: express.Request, res: express.Response) => {
     const { galaxy, system } = req.params;
     const g = parseInt(galaxy);
     const s = parseInt(system);
@@ -342,7 +343,7 @@ app.get('/api/galaxy/:galaxy/:system', protect, async (req: Request, res: Respon
 });
 
 
-app.get('/api/rankings', protect, async (req: Request, res: Response) => {
+app.get('/api/rankings', protect, async (req: express.Request, res: express.Response) => {
     try {
         const users = db.collection<User>('users');
         const rankings = await users
@@ -367,7 +368,7 @@ app.get('/api/rankings', protect, async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/queue/add', protect, async (req: Request, res: Response) => {
+app.post('/api/queue/add', protect, async (req: express.Request, res: express.Response) => {
     try {
         const user = req.user!;
         const { planetId, id, type, amount = 1 } = req.body;
@@ -427,7 +428,7 @@ app.post('/api/queue/add', protect, async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/fleet/send', protect, async (req: Request, res: Response) => {
+app.post('/api/fleet/send', protect, async (req: express.Request, res: express.Response) => {
     try {
         const user = req.user!;
         const { originPlanetId, missionFleet, targetCoords, missionType } = req.body;
@@ -484,7 +485,16 @@ app.post('/api/fleet/send', protect, async (req: Request, res: Response) => {
 // Add other endpoints like /api/merchant/trade and /api/inventory/activate here,
 // making sure they are protected by `protect` middleware.
 
-app.get('/', (req: Request, res: Response) => res.send('Cosmic Lord Backend is running!'));
+// --- Static File Serving ---
+// Serve static files from the root of the project where index.html lives
+app.use(express.static(path.join(__dirname, '..', '..')));
+
+// For any GET request that doesn't match an API route or a static file,
+// serve the main index.html file. This allows for client-side routing.
+app.get('*', (req: express.Request, res: express.Response) => {
+    // __dirname will be /backend/dist, so we go up two directories
+    res.sendFile(path.join(__dirname, '..', '..', 'index.html'));
+});
 
 const masterGameLoop = async () => {
     try {
