@@ -2,12 +2,13 @@ import jwt from 'jsonwebtoken';
 import { db } from '../config/db';
 import { User } from '../types';
 import { ObjectId } from 'mongodb';
+import { Request, Response, NextFunction } from 'express';
 
 interface JwtPayload {
     id: string;
 }
 
-export const protect = async (req, res, next) => {
+export const protect = async (req: Request, res: Response, next: NextFunction) => {
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {

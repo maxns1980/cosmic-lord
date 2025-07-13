@@ -2,7 +2,7 @@
 
 
 
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { db } from '../config/db';
@@ -33,13 +33,27 @@ const findEmptyPlanetSlot = async (): Promise<string | null> => {
             return coords;
         }
     }
+    
+    // Fallback: search sequentially if random attempts fail
+    for (let g = 1; g <= 9; g++) {
+        for (let s = 1; s <= 499; s++) {
+            for (let p = 4; p <= 15; p++) {
+                const coords = `${g}:${s}:${p}`;
+                const existingPlanet = await planetsCollection.findOne({ coordinates: coords });
+                if (!existingPlanet) {
+                    return coords;
+                }
+            }
+        }
+    }
+
     return null; // Could not find an empty slot
 };
 
 // @desc    Register a new user
 // @route   POST /api/users/register
 // @access  Public
-router.post('/register', async (req, res) => {
+router.post('/register', async (req: Request, res: Response) => {
     const { username, email, password } = req.body;
 
     if (!username || !email || !password) {
@@ -111,7 +125,7 @@ router.post('/register', async (req, res) => {
 // @desc    Authenticate a user
 // @route   POST /api/users/login
 // @access  Public
-router.post('/login', async (req, res) => {
+router.post('/login', async (req: Request, res: Response) => {
     const { username, password } = req.body;
     
     const usersCollection = db.collection<User>('users');

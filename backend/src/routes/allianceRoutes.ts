@@ -1,7 +1,9 @@
-import express from 'express';
+
+
+import express, { Request, Response, NextFunction } from 'express';
 import { db } from '../config/db';
 import { protect } from '../middleware/authMiddleware';
-import { Alliance, User, AllianceChatMessage } from '../types';
+import { Alliance, User, AllianceChatMessage, AllianceFE } from '../types';
 import { ObjectId } from 'mongodb';
 
 const router = express.Router();
@@ -9,7 +11,7 @@ const router = express.Router();
 // @desc    Create a new alliance
 // @route   POST /api/alliances/create
 // @access  Private
-router.post('/create', protect, async (req, res) => {
+router.post('/create', protect, async (req: Request, res: Response) => {
     const { name, tag } = req.body;
     const user = req.user!;
 
@@ -32,7 +34,7 @@ router.post('/create', protect, async (req, res) => {
     }
     
     try {
-        const newAlliance: Omit<Alliance, '_id'> = {
+        const newAllianceDoc: Omit<Alliance, '_id'> = {
             name,
             tag,
             leaderId: user._id,
@@ -42,7 +44,7 @@ router.post('/create', protect, async (req, res) => {
                 points: user.points
             }]
         };
-        const result = await alliancesCollection.insertOne(newAlliance as Alliance);
+        const result = await alliancesCollection.insertOne(newAllianceDoc as Alliance);
         const newAllianceId = result.insertedId;
         
         await usersCollection.updateOne(
@@ -51,10 +53,24 @@ router.post('/create', protect, async (req, res) => {
         );
 
         const createdAlliance = await alliancesCollection.findOne({ _id: newAllianceId });
+        
+        const feAlliance: AllianceFE | undefined = createdAlliance ? {
+            id: createdAlliance._id.toHexString(),
+            name: createdAlliance.name,
+            tag: createdAlliance.tag,
+            leaderId: createdAlliance.leaderId.toHexString(),
+            members: createdAlliance.members.map(m => ({
+                userId: m.userId.toHexString(),
+                username: m.username,
+                points: m.points,
+            })),
+            chat: [],
+        } : undefined;
+
 
         res.status(201).json({
             message: `Sojusz [${tag}] ${name} został założony!`,
-            alliance: { ...createdAlliance, id: createdAlliance?._id.toHexString(), leaderId: createdAlliance?.leaderId.toHexString(), members: createdAlliance?.members.map(m => ({...m, userId: m.userId.toHexString()})) }
+            alliance: feAlliance
         });
 
     } catch (error) {
@@ -66,7 +82,7 @@ router.post('/create', protect, async (req, res) => {
 // @desc    Leave the current alliance
 // @route   POST /api/alliances/leave
 // @access  Private
-router.post('/leave', protect, async (req, res) => {
+router.post('/leave', protect, async (req: Request, res: Response) => {
     const user = req.user!;
     if (!user.allianceId) {
         return res.status(400).json({ message: "Nie należysz do żadnego sojuszu." });
@@ -113,7 +129,7 @@ router.post('/leave', protect, async (req, res) => {
 // @desc    Get alliance chat messages
 // @route   GET /api/alliances/chat
 // @access  Private
-router.get('/chat', protect, async (req, res) => {
+router.get('/chat', protect, async (req: Request, res: Response) => {
     const user = req.user!;
     if (!user.allianceId) {
         return res.status(400).json({ message: "Nie należysz do żadnego sojuszu." });
@@ -144,7 +160,7 @@ router.get('/chat', protect, async (req, res) => {
 // @desc    Send alliance chat message
 // @route   POST /api/alliances/chat
 // @access  Private
-router.post('/chat', protect, async (req, res) => {
+router.post('/chat', protect, async (req: Request, res: Response) => {
     const user = req.user!;
     const { message } = req.body;
 
@@ -157,7 +173,7 @@ router.post('/chat', protect, async (req, res) => {
 
     const chatCollection = db.collection<AllianceChatMessage>('alliance_chats');
     try {
-        const newChatMessage: Omit<AllianceChatMessage, '_id'> = {
+        const newChatMessageDoc: Omit<AllianceChatMessage, '_id'> = {
             allianceId: user.allianceId,
             userId: user._id,
             username: user.username,
@@ -165,7 +181,7 @@ router.post('/chat', protect, async (req, res) => {
             timestamp: Date.now(),
         };
 
-        await chatCollection.insertOne(newChatMessage as AllianceChatMessage);
+        await chatCollection.insertOne(newChatMessageDoc as AllianceChatMessage);
 
         // Return the latest messages after posting
         const messages = await chatCollection

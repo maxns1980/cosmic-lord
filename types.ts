@@ -482,6 +482,7 @@ export interface PlayerRank {
     rank: number;
     username: string;
     points: number;
+    allianceId?: string;
     allianceTag?: string;
 }
 

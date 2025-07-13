@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { API_URL } from '../constants';
 
 interface AuthProps {
     onLoginSuccess: (token: string) => void;
@@ -18,7 +19,7 @@ const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
         setError('');
         setIsLoading(true);
 
-        const url = isLogin ? 'http://localhost:5000/api/users/login' : 'http://localhost:5000/api/users/register';
+        const url = isLogin ? `${API_URL}/api/users/login` : `${API_URL}/api/users/register`;
         const body = isLogin ? { username, password } : { username, email, password };
 
         try {

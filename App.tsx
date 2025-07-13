@@ -10,7 +10,7 @@ import {
     GameState, Planet, Alliance
 } from './types';
 import { 
-    ALL_GAME_OBJECTS, BUILDING_DATA
+    API_URL
 } from './constants';
 import Header from './components/Header';
 import BuildingsPanel from './components/BuildingsPanel';
@@ -66,7 +66,7 @@ function App() {
     }
     
     try {
-        const response = await fetch('http://localhost:5000/api/state', {
+        const response = await fetch(`${API_URL}/api/state`, {
              headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -175,7 +175,7 @@ function App() {
 const handleActivateBoost = useCallback(async (boostId: string) => {
     if (!token) return;
     try {
-        const response = await fetch('http://localhost:5000/api/inventory/activate', {
+        const response = await fetch(`${API_URL}/api/inventory/activate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ boostId }),
@@ -199,7 +199,7 @@ const handleActivateBoost = useCallback(async (boostId: string) => {
     if (!currentPlanetId || !token) return;
     
     try {
-        const response = await fetch('http://localhost:5000/api/queue/add', {
+        const response = await fetch(`${API_URL}/api/queue/add`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ planetId: currentPlanetId, id, type, amount }),
@@ -228,7 +228,7 @@ const handleActivateBoost = useCallback(async (boostId: string) => {
       if (!currentPlanetId || !token) return;
 
       try {
-        const response = await fetch('http://localhost:5000/api/fleet/send', {
+        const response = await fetch(`${API_URL}/api/fleet/send`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ originPlanetId: currentPlanetId, missionFleet, targetCoords, missionType }),
@@ -266,7 +266,7 @@ const handleActivateBoost = useCallback(async (boostId: string) => {
   const handleTrade = useCallback(async (resource: keyof Resources, amount: number, tradeType: 'buy' | 'sell') => {
       if (!currentPlanetId || !token) return;
       try {
-        const response = await fetch('http://localhost:5000/api/merchant/trade', {
+        const response = await fetch(`${API_URL}/api/merchant/trade`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ planetId: currentPlanetId, resource, amount, tradeType }),

@@ -1,6 +1,8 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { PlayerRank, Alliance } from '../types';
+import { API_URL } from '../constants';
 
 interface RankingsPanelProps {
     currentPlayerUsername: string;
@@ -24,7 +26,7 @@ const RankingsPanel: React.FC<RankingsPanelProps> = ({ currentPlayerUsername, pl
             }
             try {
                 setIsLoading(true);
-                const response = await fetch('http://localhost:5000/api/rankings', {
+                const response = await fetch(`${API_URL}/api/rankings`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!response.ok) {
@@ -46,7 +48,7 @@ const RankingsPanel: React.FC<RankingsPanelProps> = ({ currentPlayerUsername, pl
         if (player.username === currentPlayerUsername) {
             return 'bg-cyan-900 bg-opacity-50 font-bold text-white';
         }
-        if (playerAlliance && player.allianceTag === playerAlliance.tag) {
+        if (playerAlliance && player.allianceId && player.allianceId === playerAlliance.id) {
             return 'bg-green-900 bg-opacity-40 text-green-300';
         }
         // Future: Add logic for allied/enemy alliances

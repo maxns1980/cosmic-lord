@@ -1,5 +1,5 @@
+
 import { ObjectId } from 'mongodb';
-import { Request } from 'express';
 
 export type View = 'buildings' | 'research' | 'shipyard' | 'defense' | 'fleet' | 'messages' | 'merchant' | 'galaxy' | 'fleet_upgrades';
 
@@ -376,7 +376,7 @@ export enum BoostType {
     ARMOR_TECH_BOOST = 'ARMOR_TECH_BOOST',
     DRIVE_TECH_BOOST = 'DRIVE_TECH_BOOST',
     CONSTRUCTION_COST_REDUCTION = 'CONSTRUCTION_COST_REDUCTION',
-    CONSTRUCTION_TIME_REDUCTION = 'CONSTRUCTION_TIME_REduction',
+    CONSTRUCTION_TIME_REDUCTION = 'CONSTRUCTION_TIME_REDUCTION',
     STORAGE_PROTECTION_BOOST = 'STORAGE_PROTECTION_BOOST',
     SECTOR_ACTIVITY_SCAN = 'SECTOR_ACTIVITY_SCAN',
     ABANDONED_COLONY_LOOT = 'ABANDONED_COLONY_LOOT',
@@ -423,6 +423,7 @@ export interface PlayerRank {
     rank: number;
     username: string;
     points: number;
+    allianceId?: string;
     allianceTag?: string;
 }
 

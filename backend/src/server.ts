@@ -1,4 +1,6 @@
-import express from 'express';
+
+
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB, db } from './config/db';
@@ -34,7 +36,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
 
-const app = express();
+const app: express.Application = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
@@ -124,7 +126,7 @@ const updatePlayerState = async (userId: ObjectId) => {
                         await planets.updateOne({_id: targetPlanet._id}, { $set: { fleet: combatResult.defenderFleetAfter, defenses: combatResult.defenderDefensesAfter, resources: combatResult.defenderResourcesAfter }});
                         
                         // Update attacker's loot
-                        await fleetMissions.updateOne({ _id: mission._id }, { $set: { 'loot.metal': combatResult.loot.metal, 'loot.crystal': combatResult.loot.crystal, 'loot.deuterium': combatResult.loot.deuterium } });
+                        await fleetMissions.updateOne({ _id: mission._id! }, { $set: { 'loot.metal': combatResult.loot.metal, 'loot.crystal': combatResult.loot.crystal, 'loot.deuterium': combatResult.loot.deuterium } });
 
                         // Create debris field
                         if ((combatResult.debrisCreated.metal || 0) > 0 || (combatResult.debrisCreated.crystal || 0) > 0) {
@@ -204,6 +206,9 @@ const updatePlayerState = async (userId: ObjectId) => {
     const updatedPlanetsForPoints = await planets.find({ userId: user._id }).toArray();
     if (updatedUserForPoints) {
         const points = calculatePlayerPoints(updatedUserForPoints, updatedPlanetsForPoints);
+        if (updatedUserForPoints.allianceId) {
+             await db.collection('alliances').updateOne({ _id: updatedUserForPoints.allianceId, 'members.userId': user._id }, { $set: { 'members.$.points': points } });
+        }
         await users.updateOne({ _id: user._id }, { $set: { points, lastActivity: new Date() } });
     } else {
         await users.updateOne({ _id: user._id }, { $set: { lastActivity: new Date() } });
@@ -211,7 +216,7 @@ const updatePlayerState = async (userId: ObjectId) => {
 };
 
 
-app.get('/api/state', protect, async (req, res) => {
+app.get('/api/state', protect, async (req: Request, res: Response) => {
     try {
         const user = req.user!;
         await updatePlayerState(user._id);
@@ -287,7 +292,7 @@ app.get('/api/state', protect, async (req, res) => {
     }
 });
 
-app.get('/api/galaxy/:galaxy/:system', protect, async (req, res) => {
+app.get('/api/galaxy/:galaxy/:system', protect, async (req: Request, res: Response) => {
     const { galaxy, system } = req.params;
     const g = parseInt(galaxy);
     const s = parseInt(system);
@@ -337,20 +342,21 @@ app.get('/api/galaxy/:galaxy/:system', protect, async (req, res) => {
 });
 
 
-app.get('/api/rankings', protect, async (req, res) => {
+app.get('/api/rankings', protect, async (req: Request, res: Response) => {
     try {
         const users = db.collection<User>('users');
         const rankings = await users
             .find({})
             .sort({ points: -1 })
             .limit(100)
-            .project({ username: 1, points: 1, allianceTag: 1 })
+            .project({ username: 1, points: 1, allianceId: 1, allianceTag: 1 })
             .toArray();
 
         const playerRanks: PlayerRank[] = rankings.map((user, index) => ({
             rank: index + 1,
             username: user.username,
             points: Math.floor(user.points),
+            allianceId: user.allianceId?.toHexString(),
             allianceTag: user.allianceTag,
         }));
 
@@ -361,7 +367,7 @@ app.get('/api/rankings', protect, async (req, res) => {
     }
 });
 
-app.post('/api/queue/add', protect, async (req, res) => {
+app.post('/api/queue/add', protect, async (req: Request, res: Response) => {
     try {
         const user = req.user!;
         const { planetId, id, type, amount = 1 } = req.body;
@@ -421,7 +427,7 @@ app.post('/api/queue/add', protect, async (req, res) => {
     }
 });
 
-app.post('/api/fleet/send', protect, async (req, res) => {
+app.post('/api/fleet/send', protect, async (req: Request, res: Response) => {
     try {
         const user = req.user!;
         const { originPlanetId, missionFleet, targetCoords, missionType } = req.body;
@@ -478,7 +484,7 @@ app.post('/api/fleet/send', protect, async (req, res) => {
 // Add other endpoints like /api/merchant/trade and /api/inventory/activate here,
 // making sure they are protected by `protect` middleware.
 
-app.get('/', (req, res) => res.send('Cosmic Lord Backend is running!'));
+app.get('/', (req: Request, res: Response) => res.send('Cosmic Lord Backend is running!'));
 
 const masterGameLoop = async () => {
     try {

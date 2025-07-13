@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { MissionType, DebrisField, Planet, GalaxyPlanet, Alliance } from '../types';
+import { API_URL } from '../constants';
 
 interface GalaxyPanelProps {
     onAction: (targetCoords: string, missionType: MissionType) => void;
@@ -39,7 +40,7 @@ const GalaxyPanel: React.FC<GalaxyPanelProps> = ({ onAction, colonies, token, pl
         if (!token) return;
         setIsLoading(true);
         try {
-            const response = await fetch(`http://localhost:5000/api/galaxy/${g}/${s}`, {
+            const response = await fetch(`${API_URL}/api/galaxy/${g}/${s}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {

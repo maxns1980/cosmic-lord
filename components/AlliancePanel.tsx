@@ -1,5 +1,8 @@
+
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Alliance, AllianceChatMessageFE } from '../types';
+import { API_URL } from '../constants';
 
 interface AlliancePanelProps {
     alliance: Alliance | undefined;
@@ -25,13 +28,13 @@ const AlliancePanel: React.FC<AlliancePanelProps> = ({ alliance, onUpdateAllianc
     }, [alliance?.chat]);
 
     useEffect(() => {
-        if (!alliance) return;
+        if (!alliance || !alliance.id) return;
 
         const fetchChat = async () => {
             const token = localStorage.getItem('token');
             if (!token) return;
             try {
-                const response = await fetch('http://localhost:5000/api/alliances/chat', {
+                const response = await fetch(`${API_URL}/api/alliances/chat`, {
                      headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (response.ok) {
@@ -46,7 +49,7 @@ const AlliancePanel: React.FC<AlliancePanelProps> = ({ alliance, onUpdateAllianc
         const intervalId = setInterval(fetchChat, 5000); // Poll every 5 seconds
 
         return () => clearInterval(intervalId);
-    }, [alliance?.id]);
+    }, [alliance?.id, onUpdateAlliance]);
 
 
     const handleCreateAlliance = async (e: React.FormEvent) => {
@@ -62,7 +65,7 @@ const AlliancePanel: React.FC<AlliancePanelProps> = ({ alliance, onUpdateAllianc
         }
 
         try {
-            const response = await fetch('http://localhost:5000/api/alliances/create', {
+            const response = await fetch(`${API_URL}/api/alliances/create`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ name: allianceName, tag: allianceTag }),
@@ -92,7 +95,7 @@ const AlliancePanel: React.FC<AlliancePanelProps> = ({ alliance, onUpdateAllianc
         }
 
         try {
-            const response = await fetch('http://localhost:5000/api/alliances/leave', {
+            const response = await fetch(`${API_URL}/api/alliances/leave`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
             });
@@ -119,7 +122,7 @@ const AlliancePanel: React.FC<AlliancePanelProps> = ({ alliance, onUpdateAllianc
         }
 
         try {
-            const response = await fetch('http://localhost:5000/api/alliances/chat', {
+            const response = await fetch(`${API_URL}/api/alliances/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ message: newMessage }),
