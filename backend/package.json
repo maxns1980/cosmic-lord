@@ -1,4 +1,3 @@
-
 {
   "name": "cosmic-lord-backend",
   "version": "1.0.0",
@@ -18,7 +17,8 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.0.0"
+    "mongodb": "^6.0.0",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.4",
@@ -26,6 +26,7 @@
     "@types/express": "^4.17.17",
     "@types/jsonwebtoken": "^9.0.3",
     "@types/node": "^20.5.9",
+    "@types/uuid": "^9.0.4",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
