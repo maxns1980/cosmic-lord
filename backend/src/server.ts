@@ -1,6 +1,5 @@
 
-
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -217,7 +216,7 @@ const updatePlayerState = async (userId: ObjectId) => {
 };
 
 
-app.get('/api/state', protect, async (req: Request, res: Response) => {
+app.get('/api/state', protect, async (req: express.Request, res: express.Response) => {
     try {
         const user = req.user!;
         await updatePlayerState(user._id);
@@ -293,7 +292,7 @@ app.get('/api/state', protect, async (req: Request, res: Response) => {
     }
 });
 
-app.get('/api/galaxy/:galaxy/:system', protect, async (req: Request, res: Response) => {
+app.get('/api/galaxy/:galaxy/:system', protect, async (req: express.Request, res: express.Response) => {
     const { galaxy, system } = req.params;
     const g = parseInt(galaxy);
     const s = parseInt(system);
@@ -343,7 +342,7 @@ app.get('/api/galaxy/:galaxy/:system', protect, async (req: Request, res: Respon
 });
 
 
-app.get('/api/rankings', protect, async (req: Request, res: Response) => {
+app.get('/api/rankings', protect, async (req: express.Request, res: express.Response) => {
     try {
         const users = db.collection<User>('users');
         const rankings = await users
@@ -368,7 +367,7 @@ app.get('/api/rankings', protect, async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/queue/add', protect, async (req: Request, res: Response) => {
+app.post('/api/queue/add', protect, async (req: express.Request, res: express.Response) => {
     try {
         const user = req.user!;
         const { planetId, id, type, amount = 1 } = req.body;
@@ -428,7 +427,7 @@ app.post('/api/queue/add', protect, async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/fleet/send', protect, async (req: Request, res: Response) => {
+app.post('/api/fleet/send', protect, async (req: express.Request, res: express.Response) => {
     try {
         const user = req.user!;
         const { originPlanetId, missionFleet, targetCoords, missionType } = req.body;
@@ -490,7 +489,7 @@ app.post('/api/fleet/send', protect, async (req: Request, res: Response) => {
 // Serve static files from the root of the project where index.html lives
 // and set correct content-type for .ts/.tsx files
 app.use(express.static(path.join(__dirname, '..', '..'), {
-    setHeaders: (res, filePath) => {
+    setHeaders: (res: express.Response, filePath: string) => {
         if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
             res.setHeader('Content-Type', 'application/javascript');
         }
@@ -500,7 +499,7 @@ app.use(express.static(path.join(__dirname, '..', '..'), {
 
 // For any GET request that doesn't match an API route or a static file,
 // serve the main index.html file. This allows for client-side routing.
-app.get('*', (req: Request, res: Response) => {
+app.get('*', (req: express.Request, res: express.Response) => {
     // __dirname will be /backend/dist, so we go up two directories
     res.sendFile(path.join(__dirname, '..', '..', 'index.html'));
 });
@@ -520,11 +519,17 @@ const masterGameLoop = async () => {
 };
 
 const startServer = async () => {
-    await connectDB();
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-        setInterval(masterGameLoop, 15000);
-    });
+    try {
+        await connectDB();
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+            // Run the loop only after the server has successfully started.
+            setInterval(masterGameLoop, 15000); 
+        });
+    } catch (error) {
+        console.error("Failed to start server:", error);
+        process.exit(1);
+    }
 };
 
 startServer();
