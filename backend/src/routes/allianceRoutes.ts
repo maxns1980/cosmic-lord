@@ -1,4 +1,5 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import type { Request, Response } from 'express';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { createAlliance, getAlliances, joinAlliance, leaveAlliance } from '../controllers/allianceController';
 
