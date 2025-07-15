@@ -1,8 +1,8 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB, db } from './config/db';
-import { GameState, FleetMission, Message } from './types';
+import { GameState, FleetMission, Message, MerchantStatus, PirateMercenaryStatus, AncientArtifactStatus } from './types';
 import { 
     PLAYER_HOME_COORDS
 } from './constants';
@@ -28,7 +28,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/alliances', allianceRoutes);
 
 
-app.get('/api/state', authMiddleware, async (req: express.Request, res: express.Response) => {
+app.get('/api/state', authMiddleware, async (req: Request, res: Response) => {
     try {
         const user = req.user;
         if (!user || !user._id) {
@@ -89,10 +89,10 @@ app.get('/api/state', authMiddleware, async (req: express.Request, res: express.
             npcFleetMissions: [], 
             npcStates: {},
             debrisFields: {},
-            merchantState: { status: 'INACTIVE', arrivalTime: 0, departureTime: 0, rates: { metal: { buy: 2, sell: 1}, crystal: { buy: 4, sell: 2 }, deuterium: { buy: 6, sell: 3 }}},
-            pirateMercenaryState: { status: 'INACTIVE', fleet: {}, hireCost: 0, arrivalTime: 0, departureTime: 0 },
+            merchantState: { status: MerchantStatus.INACTIVE, arrivalTime: 0, departureTime: 0, rates: { metal: { buy: 2, sell: 1}, crystal: { buy: 4, sell: 2 }, deuterium: { buy: 6, sell: 3 }}},
+            pirateMercenaryState: { status: PirateMercenaryStatus.INACTIVE, fleet: {}, hireCost: 0, arrivalTime: 0, departureTime: 0 },
             resourceVeinBonus: { active: false, resourceType: null, endTime: 0, bonusMultiplier: 1.25 },
-            ancientArtifactState: { status: 'INACTIVE' },
+            ancientArtifactState: { status: AncientArtifactStatus.INACTIVE },
             spacePlague: { active: false, infectedShip: null, endTime: 0 },
         };
 
@@ -104,7 +104,7 @@ app.get('/api/state', authMiddleware, async (req: express.Request, res: express.
     }
 });
 
-app.get('/', (req: express.Request, res: express.Response) => {
+app.get('/', (req: Request, res: Response) => {
     res.send('Cosmic Lord Backend is running!');
 });
 

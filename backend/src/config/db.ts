@@ -1,5 +1,4 @@
 import { MongoClient, Db } from 'mongodb';
-import { exit } from 'process';
 
 const uri = process.env.MONGO_URI;
 if (!uri) {
@@ -17,6 +16,6 @@ export const connectDB = async () => {
         console.log('MongoDB Connected');
     } catch (error) {
         console.error('Could not connect to MongoDB', error);
-        exit(1);
+        process.exit(1);
     }
 };

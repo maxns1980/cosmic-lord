@@ -1,4 +1,4 @@
-import express from 'express';
+import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { usersCollection } from '../models/userModel';
@@ -25,7 +25,7 @@ const generateToken = (id: string) => {
 // @desc    Register a new user
 // @route   POST /api/users/register
 // @access  Public
-export const registerUser = async (req: express.Request, res: express.Response) => {
+export const registerUser = async (req: Request, res: Response) => {
     const { username, email, password } = req.body;
 
     if (!username || !email || !password) {
@@ -104,7 +104,7 @@ export const registerUser = async (req: express.Request, res: express.Response) 
 // @desc    Authenticate a user
 // @route   POST /api/users/login
 // @access  Public
-export const loginUser = async (req: express.Request, res: express.Response) => {
+export const loginUser = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     // Check for user email
