@@ -1,7 +1,6 @@
-
 import React from 'react';
-import { ShipType, Resources, BuildingLevels, ResearchLevels, BuildingType, ResearchType } from '../types';
-import { SHIP_UPGRADE_DATA, SHIPYARD_DATA, ALL_GAME_OBJECTS } from '../constants';
+import { ShipType, Resources, BuildingLevels, ResearchLevels, BuildingType, ResearchType } from '../types.ts';
+import { SHIP_UPGRADE_DATA, SHIPYARD_DATA, ALL_GAME_OBJECTS } from '../constants.ts';
 
 interface FleetUpgradesRowProps {
   type: ShipType;

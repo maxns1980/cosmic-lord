@@ -1,8 +1,7 @@
-
 import React from 'react';
-import { ShipType, Resources, ResearchLevels, QueueItem, BuildingLevels, ShipLevels } from '../types';
-import { SHIP_UPGRADE_DATA, SHIPYARD_DATA } from '../constants';
-import FleetUpgradesRow from './FleetUpgradesRow';
+import { ShipType, Resources, ResearchLevels, QueueItem, BuildingLevels, ShipLevels } from '../types.ts';
+import { SHIP_UPGRADE_DATA, SHIPYARD_DATA } from '../constants.ts';
+import FleetUpgradesRow from './FleetUpgradesRow.tsx';
 
 interface FleetUpgradesPanelProps {
   research: ResearchLevels;

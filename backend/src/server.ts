@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -11,6 +11,7 @@ import { ObjectId } from 'mongodb';
 import { authMiddleware } from './middleware/authMiddleware';
 import userRoutes from './routes/userRoutes';
 import allianceRoutes from './routes/allianceRoutes';
+import { ServerResponse } from 'http';
 
 dotenv.config();
 
@@ -30,7 +31,7 @@ const startServer = async () => {
     app.use('/api/alliances', allianceRoutes);
 
 
-    app.get('/api/state', authMiddleware, async (req: Request, res: Response) => {
+    app.get('/api/state', authMiddleware, async (req: express.Request, res: express.Response) => {
         try {
             const user = req.user;
             if (!user || !user._id) {
@@ -111,11 +112,17 @@ const startServer = async () => {
     const frontendPath = path.join(__dirname, '..', '..');
     
     // Serve static files from the root of the project
-    app.use(express.static(frontendPath));
+    app.use(express.static(frontendPath, {
+        setHeaders: (res: ServerResponse, filePath: string) => {
+            if (path.extname(filePath) === '.ts' || path.extname(filePath) === '.tsx') {
+                res.setHeader('Content-Type', 'application/javascript');
+            }
+        }
+    }));
     
     // For any route that doesn't match an API route or a static file,
     // serve the index.html file. This is for the React SPA.
-    app.get('*', (req: Request, res: Response, next: NextFunction) => {
+    app.get('*', (req: express.Request, res: express.Response, next: express.NextFunction) => {
         if (req.path.startsWith('/api/')) {
             return next();
         }

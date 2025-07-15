@@ -1,8 +1,6 @@
-
-
 import React, { useState, useEffect } from 'react';
-import { PirateMercenaryState, PirateMercenaryStatus, ShipType } from '../types';
-import { SHIPYARD_DATA } from '../constants';
+import { PirateMercenaryState, PirateMercenaryStatus, ShipType } from '../types.ts';
+import { SHIPYARD_DATA } from '../constants.ts';
 
 const formatTime = (seconds: number) => {
     if (seconds < 0) seconds = 0;

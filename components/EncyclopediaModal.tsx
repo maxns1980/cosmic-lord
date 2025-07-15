@@ -5,8 +5,8 @@ import {
     SHIPYARD_DATA,
     DEFENSE_DATA,
     ALL_GAME_OBJECTS,
-} from '../constants';
-import { BuildingType, ResearchType, ShipType, DefenseType, Resources, BuildingLevels, ResearchLevels } from '../types';
+} from '../constants.ts';
+import { BuildingType, ResearchType, ShipType, DefenseType, Resources, BuildingLevels, ResearchLevels } from '../types.ts';
 
 interface EncyclopediaModalProps {
     onClose: () => void;

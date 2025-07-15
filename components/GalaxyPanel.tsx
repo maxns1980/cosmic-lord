@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { MissionType, NPCStates, NPCPersonality, NPCState, NPCFleetMission, DebrisField, Colony } from '../types';
-import { INITIAL_NPC_STATE, PLAYER_HOME_COORDS } from '../constants';
-import { evolveNpc } from '../utils/npcLogic';
+import { MissionType, NPCStates, NPCPersonality, NPCState, NPCFleetMission, DebrisField, Colony } from '../types.ts';
+import { INITIAL_NPC_STATE, PLAYER_HOME_COORDS } from '../constants.ts';
+import { evolveNpc } from '../utils/npcLogic.ts';
 
 interface GalaxyPanelProps {
     onAction: (targetCoords: string, missionType: MissionType) => void;
