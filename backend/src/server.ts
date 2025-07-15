@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB, db } from './config/db';
@@ -29,7 +29,7 @@ const startServer = async () => {
     app.use('/api/alliances', allianceRoutes);
 
 
-    app.get('/api/state', authMiddleware, async (req: Request, res: Response) => {
+    app.get('/api/state', authMiddleware, async (req: ExpressRequest, res: ExpressResponse) => {
         try {
             const user = req.user;
             if (!user || !user._id) {
@@ -105,7 +105,7 @@ const startServer = async () => {
         }
     });
 
-    app.get('/', (req: Request, res: Response) => {
+    app.get('/', (req: ExpressRequest, res: ExpressResponse) => {
         res.send('Cosmic Lord Backend is running!');
     });
 
