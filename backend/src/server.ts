@@ -107,7 +107,8 @@ const startServer = async () => {
     });
 
     // --- Serve Frontend ---
-    const frontendPath = path.join(__dirname, '..', '..', '..');
+    // The server file is in `backend/dist`, so we need to go up two levels to reach the project root.
+    const frontendPath = path.join(__dirname, '..', '..');
     
     // Serve static files from the root of the project
     app.use(express.static(frontendPath));
