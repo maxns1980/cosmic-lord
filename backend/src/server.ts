@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB, db } from './config/db';
-import { GameState } from './types';
+import { GameState, FleetMission, Message } from './types';
 import { 
     INITIAL_RESOURCES, 
     INITIAL_BUILDING_LEVELS,
@@ -90,12 +90,12 @@ app.get('/api/state', async (req: Request, res: Response) => {
         userObjectId = user._id;
 
         // Fetch all data for this user
-        const planets = await planetsCollection.find({ userId: userObjectId }).toArray();
         const fleetMissions = await db.collection('fleet_missions').find({ ownerId: userObjectId }).toArray();
         const messages = await db.collection('messages').find({ recipientId: userObjectId }).sort({ timestamp: -1 }).limit(100).toArray();
         
         // Find the main planet to return its state for now
         // Later, we will handle multiple planets
+        const planets = await planetsCollection.find({ userId: userObjectId }).toArray();
         const mainPlanet = planets.find(p => p.isHomeworld);
 
         if (!mainPlanet) {
@@ -116,8 +116,8 @@ app.get('/api/state', async (req: Request, res: Response) => {
             activeBoosts: user.activeBoosts,
             colonies: user.colonies || INITIAL_COLONIES, // fetch from a separate collection later
 
-            fleetMissions: fleetMissions.map(m => ({...m, id: m._id.toString() })),
-            messages: messages.map(m => ({...m, id: m._id.toString() })),
+            fleetMissions: fleetMissions.map(({ _id, ...rest }) => ({ id: _id.toString(), ...rest } as unknown as FleetMission)),
+            messages: messages.map(({ _id, ...rest }) => ({ id: _id.toString(), ...rest } as unknown as Message)),
 
             // These will be calculated and handled by the game loop on the server later
             lastSaveTime: Date.now(),
