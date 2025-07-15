@@ -1,8 +1,6 @@
 
 
-import { BuildingType, ResearchType, ShipType, DefenseType, Resources, BuildingLevels, ResearchLevels, Fleet, Defenses, BuildingCategory, MerchantState, MerchantStatus, NPCState, NPCFleetMission, ShipLevels, DebrisField, PirateMercenaryState, PirateMercenaryStatus, ResourceVeinBonus, AncientArtifactState, AncientArtifactStatus, SpacePlagueState, CombatStats, Inventory, ActiveBoosts, Planet } from './types';
-
-export const API_URL = 'https://cosmic-lord-backend.onrender.com'; // <-- PASTE YOUR RENDER URL HERE
+import { BuildingType, ResearchType, ShipType, DefenseType, Resources, BuildingLevels, ResearchLevels, Fleet, Defenses, BuildingCategory, MerchantState, MerchantStatus, NPCState, NPCFleetMission, ShipLevels, DebrisField, PirateMercenaryState, PirateMercenaryStatus, ResourceVeinBonus, AncientArtifactState, AncientArtifactStatus, SpacePlagueState, CombatStats, Colony, Inventory, ActiveBoosts } from './types';
 
 export const TICK_INTERVAL = 1000; // ms
 export const BASE_STORAGE_CAPACITY = 10000;
@@ -74,6 +72,7 @@ export const INITIAL_SHIP_LEVELS: ShipLevels = {
 
 export const INITIAL_FLEET: Fleet = {};
 export const INITIAL_DEFENSES: Defenses = {};
+export const INITIAL_COLONIES: Colony[] = [];
 export const INITIAL_NPC_FLEET_MISSIONS: NPCFleetMission[] = [];
 export const INITIAL_DEBRIS_FIELDS: Record<string, DebrisField> = {};
 export const INITIAL_INVENTORY: Inventory = { boosts: [] };

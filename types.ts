@@ -1,6 +1,6 @@
 
 
-export type View = 'buildings' | 'research' | 'shipyard' | 'defense' | 'fleet' | 'messages' | 'merchant' | 'galaxy' | 'fleet_upgrades' | 'rankings' | 'alliance';
+export type View = 'buildings' | 'research' | 'shipyard' | 'defense' | 'fleet' | 'messages' | 'merchant' | 'galaxy' | 'fleet_upgrades';
 
 export enum BuildingType {
   METAL_MINE = 'METAL_MINE',
@@ -122,7 +122,6 @@ export enum MissionType {
 export interface FleetMission {
     id: string;
     fleet: Fleet;
-    originCoords: string;
     missionType: MissionType;
     targetCoords: string;
     startTime: number;
@@ -356,6 +355,12 @@ export type ExpeditionMessage = BaseMessage & {
 };
 
 // --- Colonization Types ---
+export interface Colony {
+    id: string; // coords
+    name: string;
+    creationTime: number;
+}
+
 export type ColonizationMessage = BaseMessage & {
     type: 'colonization';
     coords: string;
@@ -464,86 +469,3 @@ export interface NPCState {
 }
 
 export type NPCStates = Record<string, NPCState>;
-
-export interface Planet {
-  id: string; // MongoDB ObjectId as a string
-  name: string;
-  coordinates: string;
-  isHomeworld: boolean;
-  resources: Resources;
-  buildings: BuildingLevels;
-  fleet: Fleet;
-  defenses: Defenses;
-  buildQueue: QueueItem[];
-  lastResourceUpdate: number;
-}
-
-export interface PlayerRank {
-    rank: number;
-    username: string;
-    points: number;
-    allianceId?: string;
-    allianceTag?: string;
-}
-
-export interface GalaxyPlanet {
-    coordinates: string;
-    type: 'player' | 'npc' | 'empty' | 'debris';
-    name?: string;
-    username?: string;
-    debris?: DebrisField;
-    allianceId?: string;
-    allianceTag?: string;
-}
-
-// --- Alliance Types ---
-export interface AllianceMember {
-    userId: string;
-    username: string;
-    points: number;
-}
-
-export interface AllianceChatMessageFE {
-    id: string;
-    allianceId: string;
-    userId: string;
-    username: string;
-    message: string;
-    timestamp: number;
-}
-
-export interface Alliance {
-    id: string;
-    name: string;
-    tag: string;
-    leaderId: string;
-    members: AllianceMember[];
-    chat?: AllianceChatMessageFE[];
-}
-
-
-// This is the full GameState that we will manage on the server
-// and send to the client.
-export type GameState = {
-    // Global player state
-    username: string;
-    research: ResearchLevels;
-    shipLevels: ShipLevels;
-    credits: number;
-    inventory: Inventory;
-    activeBoosts: ActiveBoosts;
-    alliance?: Alliance;
-    
-    // Per-planet state
-    planets: Planet[];
-
-    // Global dynamic state
-    fleetMissions: FleetMission[];
-    npcFleetMissions: NPCFleetMission[];
-    messages: Message[];
-    merchantState: MerchantState;
-    pirateMercenaryState: PirateMercenaryState;
-    resourceVeinBonus: ResourceVeinBonus;
-    ancientArtifactState: AncientArtifactState;
-    spacePlague: SpacePlagueState;
-};

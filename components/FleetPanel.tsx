@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Fleet, FleetMission, ShipType, MissionType, ResearchType, ResearchLevels, SpacePlagueState, Planet } from '../types';
+import { Fleet, FleetMission, ShipType, MissionType, ResearchType, ResearchLevels, SpacePlagueState, Colony, NPCStates } from '../types';
 import { SHIPYARD_DATA, RESEARCH_DATA, PLAYER_HOME_COORDS } from '../constants';
 
 interface FleetPanelProps {
@@ -11,7 +10,8 @@ interface FleetPanelProps {
     initialTarget: {coords: string, mission: MissionType} | null;
     onClearInitialTarget: () => void;
     spacePlague: SpacePlagueState;
-    colonies: Planet[];
+    colonies: Colony[];
+    npcStates: NPCStates;
 }
 
 const formatNumber = (num: number) => Math.floor(num).toLocaleString('pl-PL');
@@ -81,7 +81,7 @@ const MissionRow: React.FC<{mission: FleetMission}> = ({ mission }) => {
     )
 }
 
-const FleetPanel: React.FC<FleetPanelProps> = ({ fleet, fleetMissions, research, onSendFleet, initialTarget, onClearInitialTarget, spacePlague, colonies }) => {
+const FleetPanel: React.FC<FleetPanelProps> = ({ fleet, fleetMissions, research, onSendFleet, initialTarget, onClearInitialTarget, spacePlague, colonies, npcStates }) => {
     const [missionFleet, setMissionFleet] = useState<Fleet>({});
     const [targetCoords, setTargetCoords] = useState("1:42:8");
     const [missionType, setMissionType] = useState<MissionType>(MissionType.ATTACK);
@@ -120,7 +120,7 @@ const FleetPanel: React.FC<FleetPanelProps> = ({ fleet, fleetMissions, research,
     const hasRecyclers = (fleet[ShipType.RECYCLER] || 0) > 0;
     const hasColonyShip = (fleet[ShipType.COLONY_SHIP] || 0) > 0;
     const hasResearchVessel = (fleet[ShipType.RESEARCH_VESSEL] || 0) > 0;
-    const isTargetOccupied = colonies.some(c => c.coordinates === targetCoords);
+    const isTargetOccupied = npcStates[targetCoords] || colonies.some(c => c.id === targetCoords) || targetCoords === PLAYER_HOME_COORDS;
 
     return (
         <div className="bg-gray-800 bg-opacity-70 backdrop-blur-sm border border-gray-700 rounded-xl shadow-2xl p-4 md:p-6 space-y-8">

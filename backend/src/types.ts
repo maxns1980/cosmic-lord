@@ -1,6 +1,4 @@
 
-import { ObjectId } from 'mongodb';
-
 export type View = 'buildings' | 'research' | 'shipyard' | 'defense' | 'fleet' | 'messages' | 'merchant' | 'galaxy' | 'fleet_upgrades';
 
 export enum BuildingType {
@@ -29,6 +27,7 @@ export enum ResearchType {
     COMBUSTION_DRIVE = 'COMBUSTION_DRIVE',
     SPY_TECHNOLOGY = 'SPY_TECHNOLOGY',
     IMPULSE_DRIVE = 'IMPULSE_DRIVE',
+    // New Technologies
     LASER_TECHNOLOGY = 'LASER_TECHNOLOGY',
     ION_TECHNOLOGY = 'ION_TECHNOLOGY',
     PLASMA_TECHNOLOGY = 'PLASMA_TECHNOLOGY',
@@ -49,12 +48,15 @@ export enum ShipType {
     HEAVY_CARGO_SHIP = 'HEAVY_CARGO_SHIP',
     SPY_PROBE = 'SPY_PROBE',
     RECYCLER = 'RECYCLER',
+    // Capital Ships
     CRUISER = 'CRUISER',
     BATTLESHIP = 'BATTLESHIP',
     DESTROYER = 'DESTROYER',
+    // Specialized Ships
     BOMBER = 'BOMBER',
     COLONY_SHIP = 'COLONY_SHIP',
     RESEARCH_VESSEL = 'RESEARCH_VESSEL',
+    // End-Game Units
     BATTLECRUISER = 'BATTLECRUISER',
     DEATHSTAR = 'DEATHSTAR',
 }
@@ -62,6 +64,7 @@ export enum ShipType {
 export enum DefenseType {
     ROCKET_LAUNCHER = 'ROCKET_LAUNCHER',
     LIGHT_LASER_CANNON = 'LIGHT_LASER_CANNON',
+    // New Defenses
     HEAVY_LASER_CANNON = 'HEAVY_LASER_CANNON',
     ION_CANNON = 'ION_CANNON',
     PLASMA_TURRET = 'PLASMA_TURRET',
@@ -75,21 +78,35 @@ export interface Resources {
   deuterium: number;
 }
 
-export type BuildingLevels = { [key in BuildingType]: number; };
-export type ResearchLevels = { [key in ResearchType]: number; };
-export type ShipLevels = { [key in ShipType]: number; };
-export type Fleet = { [key in ShipType]?: number; };
-export type Defenses = { [key in DefenseType]?: number; };
+export type BuildingLevels = {
+  [key in BuildingType]: number;
+};
+
+export type ResearchLevels = {
+    [key in ResearchType]: number;
+};
+
+export type ShipLevels = {
+    [key in ShipType]: number;
+};
+
+export type Fleet = {
+    [key in ShipType]?: number;
+};
+
+export type Defenses = {
+    [key in DefenseType]?: number;
+};
 
 export type QueueItemType = 'building' | 'research' | 'ship' | 'defense' | 'ship_upgrade';
 
 export interface QueueItem {
     id: GameObject;
     type: QueueItemType;
-    levelOrAmount: number;
+    levelOrAmount: number; // For buildings/research it's the target level, for ships/defenses it's the amount
     startTime: number;
     endTime: number;
-    buildTime: number;
+    buildTime: number; // total duration in seconds
 }
 
 export enum MissionType {
@@ -102,19 +119,17 @@ export enum MissionType {
 }
 
 export interface FleetMission {
-    _id?: ObjectId;
-    id?: string;
-    ownerId: ObjectId;
-    originCoords: string;
-    targetCoords: string;
-    missionType: MissionType;
+    id: string;
     fleet: Fleet;
+    missionType: MissionType;
+    targetCoords: string;
     startTime: number;
     arrivalTime: number;
     returnTime: number;
     processedArrival: boolean;
     loot: Loot;
-    explorationEndTime?: number;
+    // New fields for exploration
+    explorationEndTime?: number; 
     processedExploration?: boolean;
 }
 
@@ -127,6 +142,14 @@ export interface NPCFleetMission {
     arrivalTime: number;
 }
 
+export interface SpyReport {
+    targetCoords: string;
+    resources: Partial<Resources>;
+    fleet: Partial<Fleet>;
+    defenses: Partial<Defenses>;
+    buildings: Partial<BuildingLevels>;
+    research: Partial<ResearchLevels>;
+}
 
 export interface Loot {
     metal?: number;
@@ -141,29 +164,9 @@ export type CombatStats = {
     structuralIntegrity: number;
 };
 
-
-// --- Message Types ---
-type BaseMessage = {
-    _id?: ObjectId;
-    id?: string;
-    recipientId: ObjectId;
-    timestamp: number;
-    isRead: boolean;
-    subject: string;
-};
-
-export interface SpyReport {
-    targetCoords: string;
-    resources: Partial<Resources>;
-    fleet: Partial<Fleet>;
-    defenses: Partial<Defenses>;
-    buildings: Partial<BuildingLevels>;
-    research: Partial<ResearchLevels>;
-}
-
 export interface BattleReport {
     id: string;
-    targetCoords: string;
+    targetCoords: string; // The coordinates where the battle took place
     attackerName: string;
     defenderName: string;
     isPlayerAttacker: boolean;
@@ -177,9 +180,23 @@ export interface BattleReport {
     debrisCreated: Partial<Resources>;
 }
 
-export type SpyMessage = BaseMessage & { type: 'spy'; report: SpyReport; };
-export type BattleMessage = BaseMessage & { type: 'battle'; report: BattleReport; };
 
+type BaseMessage = {
+    id: string;
+    timestamp: number;
+    isRead: boolean;
+    subject: string;
+};
+
+export type SpyMessage = BaseMessage & {
+    type: 'spy';
+    report: SpyReport;
+};
+
+export type BattleMessage = BaseMessage & {
+    type: 'battle';
+    report: BattleReport;
+};
 
 // --- Merchant Types ---
 export enum MerchantStatus {
@@ -337,11 +354,73 @@ export type ExpeditionMessage = BaseMessage & {
 };
 
 // --- Colonization Types ---
+export interface Colony {
+    id: string; // coords
+    name: string;
+    creationTime: number;
+}
+
 export type ColonizationMessage = BaseMessage & {
     type: 'colonization';
     coords: string;
     success: boolean;
 };
+
+// --- Boosts & Inventory ---
+export enum BoostType {
+    EXTRA_BUILD_QUEUE = 'EXTRA_BUILD_QUEUE',
+    RESOURCE_PRODUCTION_BOOST = 'RESOURCE_PRODUCTION_BOOST',
+    COMBAT_TECH_BOOST = 'COMBAT_TECH_BOOST',
+    ARMOR_TECH_BOOST = 'ARMOR_TECH_BOOST',
+    DRIVE_TECH_BOOST = 'DRIVE_TECH_BOOST',
+    CONSTRUCTION_COST_REDUCTION = 'CONSTRUCTION_COST_REDUCTION',
+    CONSTRUCTION_TIME_REDUCTION = 'CONSTRUCTION_TIME_REDUCTION',
+    STORAGE_PROTECTION_BOOST = 'STORAGE_PROTECTION_BOOST',
+    SECTOR_ACTIVITY_SCAN = 'SECTOR_ACTIVITY_SCAN',
+    ABANDONED_COLONY_LOOT = 'ABANDONED_COLONY_LOOT',
+}
+
+export interface Boost {
+    id: string;
+    type: BoostType;
+    level: number; // For queue: 2 or 3. For production: 20 or 30. For tech: 1 or 2. For drive: 20. For cost reduction: 25. For time reduction: 1 or 2. For storage: 50. For scan/loot: 1.
+    duration: number; // in seconds
+}
+
+export interface Inventory {
+    boosts: Boost[];
+}
+
+export interface ActiveBoosts {
+    [BoostType.EXTRA_BUILD_QUEUE]?: {
+        level: number; // The total number of queues (e.g., 2 or 3)
+        endTime: number;
+    };
+    [BoostType.RESOURCE_PRODUCTION_BOOST]?: {
+        level: number; // The percentage boost (e.g., 20 or 30)
+        endTime: number;
+    };
+    [BoostType.COMBAT_TECH_BOOST]?: {
+        level: number; // The technology level boost (e.g., 1 or 2)
+        endTime: number;
+    };
+    [BoostType.ARMOR_TECH_BOOST]?: {
+        level: number; // The technology level boost (e.g., 1 or 2)
+        endTime: number;
+    };
+    [BoostType.DRIVE_TECH_BOOST]?: {
+        level: number; // The percentage speed boost (e.g., 20)
+        endTime: number;
+    };
+    [BoostType.STORAGE_PROTECTION_BOOST]?: {
+        level: number; // The percentage protection (e.g., 50)
+        endTime: number;
+    };
+    [BoostType.SECTOR_ACTIVITY_SCAN]?: {
+        endTime: number;
+    };
+}
+
 
 // --- Exploration Message ---
 export enum ExplorationOutcomeType {
@@ -367,37 +446,9 @@ export type ExplorationMessage = BaseMessage & {
 
 export type Message = SpyMessage | BattleMessage | MerchantInfoMessage | EspionageEventMessage | PirateMessage | AsteroidImpactMessage | ResourceVeinMessage | AncientArtifactMessage | SpacePlagueMessage | OfflineSummaryMessage | ExpeditionMessage | ColonizationMessage | ExplorationMessage;
 
+export type DebrisField = Partial<Resources>;
 
-// --- Boosts & Inventory ---
-export enum BoostType {
-    EXTRA_BUILD_QUEUE = 'EXTRA_BUILD_QUEUE',
-    RESOURCE_PRODUCTION_BOOST = 'RESOURCE_PRODUCTION_BOOST',
-    COMBAT_TECH_BOOST = 'COMBAT_TECH_BOOST',
-    ARMOR_TECH_BOOST = 'ARMOR_TECH_BOOST',
-    DRIVE_TECH_BOOST = 'DRIVE_TECH_BOOST',
-    CONSTRUCTION_COST_REDUCTION = 'CONSTRUCTION_COST_REDUCTION',
-    CONSTRUCTION_TIME_REDUCTION = 'CONSTRUCTION_TIME_REDUCTION',
-    STORAGE_PROTECTION_BOOST = 'STORAGE_PROTECTION_BOOST',
-    SECTOR_ACTIVITY_SCAN = 'SECTOR_ACTIVITY_SCAN',
-    ABANDONED_COLONY_LOOT = 'ABANDONED_COLONY_LOOT',
-}
-
-export interface Boost {
-    id: string;
-    type: BoostType;
-    level: number;
-    duration: number;
-}
-
-export interface Inventory {
-    boosts: Boost[];
-}
-
-export interface ActiveBoosts {
-    [key: string]: { level: number; endTime: number; } | undefined;
-}
-
-// --- NPC and Galaxy Types ---
+// --- NPC Types ---
 export enum NPCPersonality {
     ECONOMIC = 'ECONOMIC',
     AGGRESSIVE = 'AGGRESSIVE',
@@ -417,156 +468,30 @@ export interface NPCState {
 }
 
 export type NPCStates = Record<string, NPCState>;
-export type DebrisField = Partial<Resources>;
-
-export interface PlayerRank {
-    rank: number;
-    username: string;
-    points: number;
-    allianceId?: string;
-    allianceTag?: string;
-}
-
-// --- Alliance Types ---
-export interface AllianceMember {
-    userId: ObjectId;
-    username: string;
-    points: number;
-}
-
-export interface AllianceChatMessage {
-    _id: ObjectId;
-    allianceId: ObjectId;
-    userId: ObjectId;
-    username: string;
-    message: string;
-    timestamp: number;
-}
-
-export interface Alliance {
-    _id: ObjectId;
-    name: string;
-    tag: string;
-    leaderId: ObjectId;
-    members: AllianceMember[];
-}
-
-export interface AllianceMemberFE {
-    userId: string;
-    username: string;
-    points: number;
-}
-
-export interface AllianceChatMessageFE {
-    id: string;
-    allianceId: string;
-    userId: string;
-    username: string;
-    message: string;
-    timestamp: number;
-}
-
-export interface AllianceFE {
-    id: string;
-    name: string;
-    tag: string;
-    leaderId: string;
-    members: AllianceMemberFE[];
-    chat?: AllianceChatMessageFE[];
-}
-
-
-// --- Main Database Schemas ---
-export interface Planet {
-    _id: ObjectId;
-    userId: ObjectId;
-    name: string;
-    coordinates: string;
-    isHomeworld: boolean;
-    resources: Resources;
-    buildings: BuildingLevels;
-    fleet: Fleet;
-    defenses: Defenses;
-    buildQueue: QueueItem[];
-    lastResourceUpdate: Date;
-}
-
-export interface User {
-    _id: ObjectId;
-    username: string;
-    email: string;
-    password?: string;
-    createdAt: Date;
-    research: ResearchLevels;
-    shipLevels: ShipLevels;
-    credits: number;
-    inventory: Inventory;
-    activeBoosts: ActiveBoosts;
-    lastActivity: Date;
-    points: number;
-    allianceId?: ObjectId;
-    allianceTag?: string;
-    resourceVeinBonus?: ResourceVeinBonus; 
-}
-
-// --- Custom Request for Auth Middleware ---
-// Now handled via declaration merging below
-
-
-export type PlanetFE = {
-  id: string; // MongoDB ObjectId as a string
-  name: string;
-  coordinates: string;
-  isHomeworld: boolean;
-  resources: Resources;
-  buildings: BuildingLevels;
-  fleet: Fleet;
-  defenses: Defenses;
-  buildQueue: QueueItem[];
-  lastResourceUpdate: number;
-}
 
 // This is the full GameState that we will manage on the server
 // and send to the client.
 export type GameState = {
-    // Global player state
-    username: string;
+    resources: Resources;
+    buildings: BuildingLevels;
     research: ResearchLevels;
     shipLevels: ShipLevels;
-    credits: number;
-    inventory: Inventory;
-    activeBoosts: ActiveBoosts;
-    alliance?: AllianceFE;
-    
-    // Per-planet state
-    planets: PlanetFE[];
-
-    // Global dynamic state
+    fleet: Fleet;
+    defenses: Defenses;
     fleetMissions: FleetMission[];
     npcFleetMissions: NPCFleetMission[];
     messages: Message[];
+    buildQueue: QueueItem[];
+    credits: number;
     merchantState: MerchantState;
     pirateMercenaryState: PirateMercenaryState;
     resourceVeinBonus: ResourceVeinBonus;
     ancientArtifactState: AncientArtifactState;
     spacePlague: SpacePlagueState;
+    lastSaveTime: number;
+    npcStates: NPCStates;
+    debrisFields: Record<string, DebrisField>;
+    colonies: Colony[];
+    inventory: Inventory;
+    activeBoosts: ActiveBoosts;
 };
-
-export interface GalaxyViewObject {
-    coordinates: string;
-    type: 'player' | 'npc' | 'empty' | 'debris';
-    name?: string; // planet name
-    username?: string; // player name
-    debris?: DebrisField;
-    allianceId?: string;
-    allianceTag?: string;
-}
-
-// Augment Express Request type
-declare global {
-    namespace Express {
-        export interface Request {
-            user?: User;
-        }
-    }
-}

@@ -69,8 +69,6 @@ const Navigation: React.FC<NavigationProps> = ({ activeView, setActiveView, unre
             <NavButton label="Stocznia" view="shipyard" activeView={activeView} onClick={setActiveView} icon="🛠️" />
             <NavButton label="Obrona" view="defense" activeView={activeView} onClick={setActiveView} icon="🛡️" />
             <NavButton label="Flota" view="fleet" activeView={activeView} onClick={setActiveView} icon="🚀" />
-            <NavButton label="Sojusz" view="alliance" activeView={activeView} onClick={setActiveView} icon="🤝" />
-            <NavButton label="Ranking" view="rankings" activeView={activeView} onClick={setActiveView} icon="🏆" />
             <NavButton label="Galaktyka" view="galaxy" activeView={activeView} onClick={setActiveView} icon="🪐" />
             <NavButton label="Wiadomości" view="messages" activeView={activeView} onClick={setActiveView} icon="✉️" badgeCount={unreadMessagesCount} />
             {merchantState.status !== MerchantStatus.INACTIVE && (

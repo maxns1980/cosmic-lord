@@ -1,21 +1,26 @@
 
-
-import React, { useState, useEffect, useMemo } from 'react';
-import { Resources, ResourceVeinBonus, Inventory, ActiveBoosts, BoostType, NPCFleetMission, Planet, BuildingLevels, BuildingType } from '../types';
-import PlanetSelector from './PlanetSelector';
-import { calculateMaxResources, calculateProductions } from '../src/utils/gameLogic';
+import React, { useState, useEffect } from 'react';
+import { Resources, ResourceVeinBonus, Inventory, ActiveBoosts, BoostType, NPCFleetMission } from '../types';
 
 interface HeaderProps {
-    username: string;
-    onLogout: () => void;
-    planets: Planet[];
-    currentPlanet: Planet;
-    onSelectPlanet: (planetId: string) => void;
+    resources: Resources;
+    maxResources: Resources;
+    productions: {
+        metal: number;
+        crystal: number;
+        deuterium: number;
+        energy: {
+            produced: number;
+            consumed: number;
+            efficiency: number;
+        }
+    };
     credits: number;
+    blackMarketHourlyIncome: number;
+    resourceVeinBonus: ResourceVeinBonus;
     inventory: Inventory;
     activeBoosts: ActiveBoosts;
     npcFleetMissions: NPCFleetMission[];
-    resourceVeinBonus: ResourceVeinBonus;
     onInfoClick: () => void;
     onEncyclopediaClick: () => void;
     onInventoryClick: () => void;
@@ -108,7 +113,7 @@ const ActiveBoostDisplay: React.FC<{activeBoosts: ActiveBoosts, npcFleetMissions
 };
 
 
-const ResourceDisplay: React.FC<{ label: string; resKey: keyof Resources; value: number; production: number; capacity: number; icon: string; colorClass: string; isBoosted: boolean; }> = ({ label, resKey, value, production, capacity, icon, colorClass, isBoosted }) => {
+const ResourceDisplay: React.FC<{ label: string; resKey: keyof Resources; value: number; production: number; capacity: number; icon: string; colorClass: string; bonus: ResourceVeinBonus; isBoosted: boolean; }> = ({ label, resKey, value, production, capacity, icon, colorClass, bonus, isBoosted }) => {
     const usage = capacity > 0 ? value / capacity : 0;
     let valueColor = 'text-white';
     if (usage >= 1) {
@@ -117,73 +122,79 @@ const ResourceDisplay: React.FC<{ label: string; resKey: keyof Resources; value:
         valueColor = 'text-yellow-400';
     }
 
+    const isBonusActive = bonus.active && bonus.resourceType === resKey;
+
     return (
         <div className={`p-2 rounded-lg flex flex-col items-center shadow-md bg-gray-800 bg-opacity-70 border ${colorClass}`}>
             <div className="text-sm font-semibold text-gray-300 flex items-center">
+                {isBonusActive && <span className="text-yellow-300 mr-1" title="Odkryto bogatą żyłę!">✨</span>}
                 {isBoosted && <span className="text-purple-400 mr-1" title="Aktywny bonus do produkcji!">📈</span>}
                 {icon} {label}
             </div>
             <div className={`text-lg font-bold ${valueColor} tracking-wider`}>{formatNumber(value)}</div>
             <div className="text-xs text-gray-400 -mt-1">/ {formatNumber(capacity)}</div>
-            <div className={`text-xs mt-1 ${isBoosted ? 'text-purple-400 font-bold' : 'text-green-400'}`}>
+            <div className={`text-xs mt-1 ${isBonusActive || isBoosted ? 'text-purple-400 font-bold' : 'text-green-400'}`}>
                 +{formatNumber(production)}/h
             </div>
+            {isBonusActive ? (
+                <div className="text-xs font-mono text-yellow-300">(<Countdown targetTime={bonus.endTime} />)</div>
+            ) : (
+                <div className="h-[16px]"></div>
+            )}
         </div>
     );
 };
 
-const EnergyDisplay: React.FC<{ energy: { produced: number; consumed: number; efficiency: number } }> = ({ energy }) => {
+const EnergyDisplay: React.FC<{ energy: HeaderProps['productions']['energy'] }> = ({ energy }) => {
     const energyColor = energy.efficiency < 1 ? 'text-red-400' : 'text-cyan-400';
     return (
          <div className="p-2 rounded-lg flex flex-col items-center shadow-md bg-gray-800 bg-opacity-70 border border-cyan-700">
             <div className="text-sm font-semibold text-gray-300 flex items-center">☀️ Energia</div>
             <div className={`text-lg font-bold ${energyColor} tracking-wider`}>{formatNumber(energy.produced - energy.consumed)}</div>
             <div className="text-xs text-gray-400">{formatNumber(energy.produced)} / {formatNumber(energy.consumed)}</div>
-             <div className="h-[16px]"></div> {/* Placeholder to match height */}
+            <div className="h-[32px]"></div> {/* Placeholder to match height */}
         </div>
     )
 }
 
-const CreditsDisplay: React.FC<{ value: number; }> = ({ value }) => {
+const CreditsDisplay: React.FC<{ value: number; hourlyIncome: number }> = ({ value, hourlyIncome }) => {
     return (
          <div className="p-2 rounded-lg flex flex-col items-center shadow-md bg-gray-800 bg-opacity-70 border border-yellow-600">
             <div className="text-sm font-semibold text-gray-300 flex items-center">💰 Kredyty</div>
             <div className={`text-lg font-bold text-yellow-300 tracking-wider`}>{formatNumber(value)}</div>
-             <div className="h-[16px] mt-1"></div>
-             <div className="h-[16px]"></div>
+             {hourlyIncome > 0 ? (
+                <div className="text-xs mt-1 text-green-400" title="Aktualna stawka z Czarnego Rynku">
+                    +{formatNumber(hourlyIncome)}/h
+                </div>
+            ) : (
+                 <div className="h-[16px] mt-1"></div>
+            )}
+            <div className="h-[16px]"></div> {/* Placeholder to match height */}
         </div>
     )
 }
 
-const Header: React.FC<HeaderProps> = ({ username, onLogout, planets, currentPlanet, onSelectPlanet, credits, inventory, activeBoosts, npcFleetMissions, resourceVeinBonus, onInfoClick, onEncyclopediaClick, onInventoryClick }) => {
+const Header: React.FC<HeaderProps> = ({ resources, productions, maxResources, credits, blackMarketHourlyIncome, resourceVeinBonus, inventory, activeBoosts, npcFleetMissions, onInfoClick, onEncyclopediaClick, onInventoryClick }) => {
     const isProdBoosted = !!activeBoosts[BoostType.RESOURCE_PRODUCTION_BOOST];
-    const productions = useMemo(() => {
-        if (!currentPlanet) return { metal: 0, crystal: 0, deuterium: 0, energy: { produced: 0, consumed: 0, efficiency: 1 } };
-        return calculateProductions(currentPlanet.buildings, resourceVeinBonus, activeBoosts, (planets || []).length - 1, currentPlanet.isHomeworld)
-    }, [currentPlanet, activeBoosts, resourceVeinBonus, planets]);
-    const maxResources = useMemo(() => calculateMaxResources(currentPlanet.buildings), [currentPlanet.buildings]);
 
     return (
         <header className="bg-gray-900 bg-opacity-50 backdrop-blur-md sticky top-0 z-40 border-b border-gray-700 shadow-lg">
             <div className="container mx-auto px-4 py-2">
                 <div className="flex flex-col xl:flex-row justify-between items-center gap-4">
-                     <div className="flex items-center gap-3 self-start xl:self-center w-full xl:w-auto">
-                        <PlanetSelector planets={planets} currentPlanetId={currentPlanet.id} onSelectPlanet={onSelectPlanet} />
-                        <div className="text-gray-300">|</div>
-                        <div className="text-gray-300 font-semibold">Gracz: <span className="text-cyan-400">{username}</span></div>
-                        <button onClick={onLogout} className="ml-2 text-sm bg-red-800 hover:bg-red-700 px-3 py-1 rounded-md transition-colors" title="Wyloguj">
-                            Wyloguj
+                    <div className="flex items-center gap-3 self-start xl:self-center">
+                        <h1 className="text-2xl md:text-3xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
+                            Kosmiczny Władca
+                        </h1>
+                        <button onClick={onInfoClick} className="text-2xl text-gray-400 hover:text-cyan-300 transition-colors duration-200" aria-label="Informacje o grze">
+                            ℹ️
+                        </button>
+                         <button onClick={onEncyclopediaClick} className="text-2xl text-gray-400 hover:text-cyan-300 transition-colors duration-200" aria-label="Encyklopedia gry">
+                            📖
                         </button>
                     </div>
 
                     <div className="flex w-full xl:w-auto flex-wrap justify-center xl:justify-end items-center gap-2">
-                         <div className="flex items-center gap-2">
-                            <button onClick={onInfoClick} className="text-2xl text-gray-400 hover:text-cyan-300 transition-colors duration-200" aria-label="Informacje o grze">
-                                ℹ️
-                            </button>
-                            <button onClick={onEncyclopediaClick} className="text-2xl text-gray-400 hover:text-cyan-300 transition-colors duration-200" aria-label="Encyklopedia gry">
-                                📖
-                            </button>
+                        <div className="flex items-center gap-2">
                              <div 
                                 onClick={onInventoryClick} 
                                 className="p-2 rounded-lg flex flex-col items-center justify-center shadow-md bg-gray-800 bg-opacity-70 border border-purple-600 cursor-pointer hover:border-purple-400 transition-colors duration-200 w-24"
@@ -191,17 +202,17 @@ const Header: React.FC<HeaderProps> = ({ username, onLogout, planets, currentPla
                                 title="Inwentarz Bonusów"
                             >
                                 <div className="text-3xl">🎁</div>
-                                <div className="text-xl font-bold text-white tracking-wider mt-1">{(inventory?.boosts || []).length}</div>
+                                <div className="text-xl font-bold text-white tracking-wider mt-1">{inventory.boosts.length}</div>
                             </div>
                             <ActiveBoostDisplay activeBoosts={activeBoosts} npcFleetMissions={npcFleetMissions} />
                         </div>
                         
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                           <ResourceDisplay label="Metal" resKey="metal" value={currentPlanet.resources.metal} production={productions.metal} capacity={maxResources.metal} icon="🔩" colorClass="border-orange-700" isBoosted={isProdBoosted} />
-                           <ResourceDisplay label="Kryształ" resKey="crystal" value={currentPlanet.resources.crystal} production={productions.crystal} capacity={maxResources.crystal} icon="💎" colorClass="border-blue-600" isBoosted={isProdBoosted} />
-                           <ResourceDisplay label="Deuter" resKey="deuterium" value={currentPlanet.resources.deuterium} production={productions.deuterium} capacity={maxResources.deuterium} icon="💧" colorClass="border-purple-600" isBoosted={isProdBoosted} />
+                           <ResourceDisplay label="Metal" resKey="metal" value={resources.metal} production={productions.metal} capacity={maxResources.metal} icon="🔩" colorClass="border-orange-700" bonus={resourceVeinBonus} isBoosted={isProdBoosted} />
+                           <ResourceDisplay label="Kryształ" resKey="crystal" value={resources.crystal} production={productions.crystal} capacity={maxResources.crystal} icon="💎" colorClass="border-blue-600" bonus={resourceVeinBonus} isBoosted={isProdBoosted} />
+                           <ResourceDisplay label="Deuter" resKey="deuterium" value={resources.deuterium} production={productions.deuterium} capacity={maxResources.deuterium} icon="💧" colorClass="border-purple-600" bonus={resourceVeinBonus} isBoosted={isProdBoosted} />
                            <EnergyDisplay energy={productions.energy} />
-                           <CreditsDisplay value={credits} />
+                           <CreditsDisplay value={credits} hourlyIncome={blackMarketHourlyIncome} />
                         </div>
                     </div>
                 </div>
