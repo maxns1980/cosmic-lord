@@ -9,7 +9,7 @@ import { ObjectId } from 'mongodb';
 // @access  Public
 export const getAlliances = async (req: Request, res: Response) => {
     try {
-        const alliances = await alliancesCollection.find({}).toArray();
+        const alliances = await alliancesCollection().find({}).toArray();
         const alliancesFE: AllianceFE[] = alliances.map(a => ({
             id: a._id.toString(),
             name: a.name,
@@ -46,7 +46,7 @@ export const createAlliance = async (req: Request, res: Response) => {
     }
 
     try {
-        const existingAlliance = await alliancesCollection.findOne({ $or: [{ name }, { tag }] });
+        const existingAlliance = await alliancesCollection().findOne({ $or: [{ name }, { tag }] });
         if (existingAlliance) {
             return res.status(400).json({ message: 'Alliance with that name or tag already exists' });
         }
@@ -66,10 +66,10 @@ export const createAlliance = async (req: Request, res: Response) => {
             createdAt: new Date(),
         };
 
-        const result = await alliancesCollection.insertOne(newAlliance);
+        const result = await alliancesCollection().insertOne(newAlliance);
         const allianceId = result.insertedId;
 
-        await usersCollection.updateOne({ _id: user._id }, { $set: { allianceId: allianceId } });
+        await usersCollection().updateOne({ _id: user._id }, { $set: { allianceId: allianceId } });
 
         res.status(201).json({
             id: allianceId.toString(),
@@ -98,7 +98,7 @@ export const joinAlliance = async (req: Request, res: Response) => {
     }
 
     try {
-        const alliance = await alliancesCollection.findOne({ _id: allianceId });
+        const alliance = await alliancesCollection().findOne({ _id: allianceId });
         if (!alliance) {
             return res.status(404).json({ message: 'Alliance not found' });
         }
@@ -110,8 +110,8 @@ export const joinAlliance = async (req: Request, res: Response) => {
             joinedAt: new Date(),
         };
 
-        await alliancesCollection.updateOne({ _id: allianceId }, { $push: { members: newMember } });
-        await usersCollection.updateOne({ _id: user._id }, { $set: { allianceId: allianceId } });
+        await alliancesCollection().updateOne({ _id: allianceId }, { $push: { members: newMember } });
+        await usersCollection().updateOne({ _id: user._id }, { $set: { allianceId: allianceId } });
 
         res.json({ message: 'Successfully joined alliance' });
 
@@ -136,7 +136,7 @@ export const leaveAlliance = async (req: Request, res: Response) => {
     }
 
     try {
-        const alliance = await alliancesCollection.findOne({ _id: allianceId });
+        const alliance = await alliancesCollection().findOne({ _id: allianceId });
         if (!alliance) {
             return res.status(404).json({ message: 'Alliance not found' });
         }
@@ -149,7 +149,7 @@ export const leaveAlliance = async (req: Request, res: Response) => {
                     .filter(m => !m.userId.equals(user._id))
                     .sort((a, b) => a.joinedAt.getTime() - b.joinedAt.getTime());
                 const newLeader = sortedMembers[0];
-                await alliancesCollection.updateOne(
+                await alliancesCollection().updateOne(
                     { _id: allianceId },
                     { 
                         $set: { leaderId: newLeader.userId, 'members.$[elem].role': 'LEADER' },
@@ -159,14 +159,14 @@ export const leaveAlliance = async (req: Request, res: Response) => {
                 );
             } else {
                 // Last member, disband alliance
-                await alliancesCollection.deleteOne({ _id: allianceId });
+                await alliancesCollection().deleteOne({ _id: allianceId });
             }
         } else {
             // Member leaves
-            await alliancesCollection.updateOne({ _id: allianceId }, { $pull: { members: { userId: user._id } } });
+            await alliancesCollection().updateOne({ _id: allianceId }, { $pull: { members: { userId: user._id } } });
         }
 
-        await usersCollection.updateOne({ _id: user._id }, { $set: { allianceId: null } });
+        await usersCollection().updateOne({ _id: user._id }, { $set: { allianceId: null } });
 
         res.json({ message: 'Successfully left alliance' });
 

@@ -15,7 +15,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
             const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
 
             // Get user from the token
-            const user = await usersCollection.findOne({ _id: new ObjectId(decoded.id) }, { projection: { passwordHash: 0 } });
+            const user = await usersCollection().findOne({ _id: new ObjectId(decoded.id) }, { projection: { passwordHash: 0 } });
             
             if (!user) {
                 return res.status(401).json({ message: 'Not authorized, user not found' });

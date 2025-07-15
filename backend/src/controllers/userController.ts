@@ -33,7 +33,7 @@ export const registerUser = async (req: Request, res: Response) => {
     }
 
     // Check if user exists
-    const userExists = await usersCollection.findOne({ $or: [{ email }, { username }] });
+    const userExists = await usersCollection().findOne({ $or: [{ email }, { username }] });
 
     if (userExists) {
         return res.status(400).json({ message: 'User already exists' });
@@ -58,7 +58,7 @@ export const registerUser = async (req: Request, res: Response) => {
     };
 
     try {
-        const userInsertResult = await usersCollection.insertOne(newUserDoc);
+        const userInsertResult = await usersCollection().insertOne(newUserDoc);
         const userObjectId = userInsertResult.insertedId;
 
         // Create homeworld planet for the user
@@ -74,15 +74,15 @@ export const registerUser = async (req: Request, res: Response) => {
             buildQueue: [],
             lastResourceUpdate: new Date()
         };
-        const planetInsertResult = await planetsCollection.insertOne(newPlanetDoc);
+        const planetInsertResult = await planetsCollection().insertOne(newPlanetDoc);
 
         // Link planet to user
-        await usersCollection.updateOne(
+        await usersCollection().updateOne(
             { _id: userObjectId },
             { $set: { planetIds: [planetInsertResult.insertedId] } }
         );
 
-        const createdUser = await usersCollection.findOne({ _id: userObjectId });
+        const createdUser = await usersCollection().findOne({ _id: userObjectId });
         
         if (createdUser) {
              res.status(201).json({
@@ -108,7 +108,7 @@ export const loginUser = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     // Check for user email
-    const user = await usersCollection.findOne({ email });
+    const user = await usersCollection().findOne({ email });
 
     if (user && (await bcrypt.compare(password, user.passwordHash))) {
         res.json({
