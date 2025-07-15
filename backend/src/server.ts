@@ -30,7 +30,7 @@ const startServer = async () => {
     app.use('/api/users', userRoutes);
     app.use('/api/alliances', allianceRoutes);
 
-    const getStateHandler: express.RequestHandler = async (req, res) => {
+    const getStateHandler = async (req: express.Request, res: express.Response) => {
         try {
             const user = req.user;
             if (!user || !user._id) {
@@ -106,11 +106,11 @@ const startServer = async () => {
         const frontendDistPath = path.join(__dirname, '..', '..', 'frontend', 'dist');
         app.use(express.static(frontendDistPath));
 
-        app.get('*', (req, res) => {
+        app.get('*', (req: express.Request, res: express.Response) => {
             res.sendFile(path.resolve(frontendDistPath, 'index.html'));
         });
     } else {
-        app.get('/', (req, res) => {
+        app.get('/', (req: express.Request, res: express.Response) => {
             res.send('API is running... (in development)');
         });
     }

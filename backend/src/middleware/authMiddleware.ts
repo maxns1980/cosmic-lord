@@ -1,10 +1,10 @@
 
-import { RequestHandler } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
 import { usersCollection } from '../models/userModel';
 
-export const authMiddleware: RequestHandler = async (req, res, next) => {
+export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {

@@ -101,7 +101,7 @@ const BuildingRow: React.FC<BuildingRowProps> = ({ type, level, onUpgrade, canAf
     <div className={`flex flex-col md:flex-row items-center justify-between bg-gray-900 bg-opacity-50 p-4 rounded-lg border border-gray-700 transition-all duration-300 ${!isDisabled && 'hover:border-cyan-600'}`}>
       <div className="flex-1 mb-4 md:mb-0 flex items-start w-full">
          {data.image && (
-            <img src={'/' + data.image} alt={data.name} className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg shadow-md mr-4 flex-shrink-0" />
+            <img src={data.image} alt={data.name} className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg shadow-md mr-4 flex-shrink-0" />
           )}
           <div className="flex-1">
             <h3 className="text-xl font-bold text-white flex items-center">
