@@ -1,27 +1,19 @@
+
 {
-  "name": "serwer-of-kosmiczny-władca-(cosmic-lord)",
+  "name": "cosmic-lord-monorepo",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "18.3.1",
-    "react-dom/client": "18.3.1",
-    "express": "^5.1.0",
-    "mongodb": "^6.17.0",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.0",
-    "jsonwebtoken": "^9.0.2",
-    "bcryptjs": "^3.0.2",
-    "path": "^0.12.7"
+    "install": "npm install --workspaces",
+    "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "build": "npm run build -w frontend && npm run build -w backend",
+    "start": "npm run start -w backend"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
-    "typescript": "~5.7.2",
-    "vite": "^6.2.0"
+    "concurrently": "^8.2.2"
   }
 }

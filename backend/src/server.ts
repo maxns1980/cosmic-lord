@@ -30,7 +30,6 @@ const startServer = async () => {
     app.use('/api/users', userRoutes);
     app.use('/api/alliances', allianceRoutes);
 
-
     const getStateHandler: express.RequestHandler = async (req, res) => {
         try {
             const user = req.user;
@@ -40,7 +39,6 @@ const startServer = async () => {
             
             const userObjectId = new ObjectId(user._id);
 
-            // Fetch all data for this user
             const fleetMissionsCollection = db.collection('fleet_missions');
             const messagesCollection = db.collection('messages');
             const planetsCollection = db.collection('planets');
@@ -48,17 +46,13 @@ const startServer = async () => {
             const fleetMissions = await fleetMissionsCollection.find({ ownerId: userObjectId }).toArray();
             const messages = await messagesCollection.find({ recipientId: userObjectId }).sort({ timestamp: -1 }).limit(100).toArray();
             
-            // Find the main planet to return its state for now
-            // Later, we will handle multiple planets
             const planets = await planetsCollection.find({ userId: userObjectId }).toArray();
             const mainPlanet = planets.find(p => p.isHomeworld);
 
             if (!mainPlanet) {
-                // This is a failsafe. A user should always have a homeworld after registration.
                 return res.status(404).json({ message: "Main planet not found for user" });
             }
             
-            // Map DB documents to front-end types
             const fleetMissionsFE: FleetMission[] = fleetMissions.map(m => {
                 const { _id, ...rest } = m;
                 return { id: _id.toString(), ...rest } as unknown as FleetMission;
@@ -69,7 +63,6 @@ const startServer = async () => {
                 return { id: _id.toString(), ...rest } as unknown as Message;
             });
 
-            // The GameState object sent to the client
             const gameState: GameState = {
                 resources: mainPlanet.resources,
                 buildings: mainPlanet.buildings,
@@ -82,12 +75,11 @@ const startServer = async () => {
                 credits: user.credits,
                 inventory: user.inventory,
                 activeBoosts: user.activeBoosts,
-                colonies: [], // Will be implemented later
+                colonies: [],
 
                 fleetMissions: fleetMissionsFE,
                 messages: messagesFE,
 
-                // These are placeholder values. A real game loop on the server would manage this state.
                 lastSaveTime: Date.now(),
                 npcFleetMissions: [], 
                 npcStates: {},
@@ -109,30 +101,23 @@ const startServer = async () => {
     app.get('/api/state', authMiddleware, getStateHandler);
 
     // --- Serve Frontend ---
-    // The server file is in `backend/dist`, so we need to go up two levels to reach the project root.
-    const frontendPath = path.join(__dirname, '..', '..');
-    
-    // Serve static files from the root of the project
-    app.use(express.static(frontendPath, {
-        setHeaders: (res, filePath) => {
-            if (path.extname(filePath) === '.ts' || path.extname(filePath) === '.tsx') {
-                res.setHeader('Content-Type', 'application/javascript');
-            }
-        }
-    }));
-    
-    const finalHandler: express.RequestHandler = (req, res, next) => {
-        if (req.path.startsWith('/api/')) {
-            return next();
-        }
-        res.sendFile(path.resolve(frontendPath, 'index.html'));
-    };
-    // For any route that doesn't match an API route or a static file,
-    // serve the index.html file. This is for the React SPA.
-    app.get('*', finalHandler);
+    if (process.env.NODE_ENV === 'production') {
+        // In production, serve the built frontend assets
+        const frontendDistPath = path.join(__dirname, '..', '..', 'frontend', 'dist');
+        app.use(express.static(frontendDistPath));
+
+        app.get('*', (req, res) => {
+            res.sendFile(path.resolve(frontendDistPath, 'index.html'));
+        });
+    } else {
+        app.get('/', (req, res) => {
+            res.send('API is running... (in development)');
+        });
+    }
+
 
     app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+        console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
     });
 };
 
