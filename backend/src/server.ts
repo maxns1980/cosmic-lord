@@ -1,27 +1,15 @@
-
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB, db } from './config/db';
 import { GameState, FleetMission, Message } from './types';
 import { 
-    INITIAL_RESOURCES, 
-    INITIAL_BUILDING_LEVELS,
-    INITIAL_RESEARCH_LEVELS,
-    INITIAL_SHIP_LEVELS,
-    INITIAL_FLEET,
-    INITIAL_DEFENSES,
-    INITIAL_COLONIES,
-    INITIAL_MERCHANT_STATE,
-    INITIAL_PIRATE_MERCENARY_STATE,
-    INITIAL_RESOURCE_VEIN_BONUS,
-    INITIAL_ANCIENT_ARTIFACT_STATE,
-    INITIAL_SPACE_PLAGUE_STATE,
-    INITIAL_INVENTORY,
-    INITIAL_ACTIVE_BOOSTS,
     PLAYER_HOME_COORDS
 } from './constants';
 import { ObjectId } from 'mongodb';
+import { authMiddleware } from './middleware/authMiddleware';
+import userRoutes from './routes/userRoutes';
+import allianceRoutes from './routes/allianceRoutes';
 
 dotenv.config();
 
@@ -35,63 +23,27 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
-// --- Hardcoded User for now ---
-// In a real app, this would come from a JWT token after login
-const HARDCODED_USER_ID = 'player1'; 
+// API Routes
+app.use('/api/users', userRoutes);
+app.use('/api/alliances', allianceRoutes);
 
-app.get('/api/state', async (req: Request, res: Response) => {
+
+app.get('/api/state', authMiddleware, async (req: express.Request, res: express.Response) => {
     try {
-        const usersCollection = db.collection('users');
-        const planetsCollection = db.collection('planets');
-        
-        let user = await usersCollection.findOne({ username: HARDCODED_USER_ID });
-        let userObjectId;
-
-        if (!user) {
-            // --- Create a new user and their homeworld ---
-            console.log('No user found, creating a new one...');
-            const newUserDoc = {
-                username: HARDCODED_USER_ID,
-                email: 'player1@example.com',
-                createdAt: new Date(),
-                research: INITIAL_RESEARCH_LEVELS,
-                shipLevels: INITIAL_SHIP_LEVELS,
-                credits: 10000,
-                inventory: INITIAL_INVENTORY,
-                activeBoosts: INITIAL_ACTIVE_BOOSTS,
-                planetIds: [] // Will be updated after planet creation
-            };
-            const userInsertResult = await usersCollection.insertOne(newUserDoc);
-            userObjectId = userInsertResult.insertedId;
-
-            const newPlanetDoc = {
-                userId: userObjectId,
-                name: 'Planeta Matka',
-                coordinates: PLAYER_HOME_COORDS,
-                isHomeworld: true,
-                resources: INITIAL_RESOURCES,
-                buildings: INITIAL_BUILDING_LEVELS,
-                fleet: INITIAL_FLEET,
-                defenses: INITIAL_DEFENSES,
-                buildQueue: [],
-                lastResourceUpdate: new Date()
-            };
-            const planetInsertResult = await planetsCollection.insertOne(newPlanetDoc);
-
-            // Link planet to user
-            await usersCollection.updateOne(
-                { _id: userObjectId },
-                { $set: { planetIds: [planetInsertResult.insertedId] } }
-            );
-
-            user = await usersCollection.findOne({ _id: userObjectId });
+        const user = req.user;
+        if (!user || !user._id) {
+            return res.status(401).json({ message: "User not authenticated" });
         }
         
-        userObjectId = user._id;
+        const userObjectId = new ObjectId(user._id);
 
         // Fetch all data for this user
-        const fleetMissions = await db.collection('fleet_missions').find({ ownerId: userObjectId }).toArray();
-        const messages = await db.collection('messages').find({ recipientId: userObjectId }).sort({ timestamp: -1 }).limit(100).toArray();
+        const fleetMissionsCollection = db.collection('fleet_missions');
+        const messagesCollection = db.collection('messages');
+        const planetsCollection = db.collection('planets');
+
+        const fleetMissions = await fleetMissionsCollection.find({ ownerId: userObjectId }).toArray();
+        const messages = await messagesCollection.find({ recipientId: userObjectId }).sort({ timestamp: -1 }).limit(100).toArray();
         
         // Find the main planet to return its state for now
         // Later, we will handle multiple planets
@@ -99,9 +51,22 @@ app.get('/api/state', async (req: Request, res: Response) => {
         const mainPlanet = planets.find(p => p.isHomeworld);
 
         if (!mainPlanet) {
+            // This is a failsafe. A user should always have a homeworld after registration.
             return res.status(404).json({ message: "Main planet not found for user" });
         }
+        
+        // Map DB documents to front-end types
+        const fleetMissionsFE: FleetMission[] = fleetMissions.map(m => {
+            const { _id, ...rest } = m;
+            return { id: _id.toString(), ...rest } as unknown as FleetMission;
+        });
+        
+        const messagesFE: Message[] = messages.map(m => {
+            const { _id, ...rest } = m;
+            return { id: _id.toString(), ...rest } as unknown as Message;
+        });
 
+        // The GameState object sent to the client
         const gameState: GameState = {
             resources: mainPlanet.resources,
             buildings: mainPlanet.buildings,
@@ -114,21 +79,21 @@ app.get('/api/state', async (req: Request, res: Response) => {
             credits: user.credits,
             inventory: user.inventory,
             activeBoosts: user.activeBoosts,
-            colonies: user.colonies || INITIAL_COLONIES, // fetch from a separate collection later
+            colonies: [], // Will be implemented later
 
-            fleetMissions: fleetMissions.map(({ _id, ...rest }) => ({ id: _id.toString(), ...rest } as unknown as FleetMission)),
-            messages: messages.map(({ _id, ...rest }) => ({ id: _id.toString(), ...rest } as unknown as Message)),
+            fleetMissions: fleetMissionsFE,
+            messages: messagesFE,
 
-            // These will be calculated and handled by the game loop on the server later
+            // These are placeholder values. A real game loop on the server would manage this state.
             lastSaveTime: Date.now(),
             npcFleetMissions: [], 
             npcStates: {},
             debrisFields: {},
-            merchantState: INITIAL_MERCHANT_STATE,
-            pirateMercenaryState: INITIAL_PIRATE_MERCENARY_STATE,
-            resourceVeinBonus: INITIAL_RESOURCE_VEIN_BONUS,
-            ancientArtifactState: INITIAL_ANCIENT_ARTIFACT_STATE,
-            spacePlague: INITIAL_SPACE_PLAGUE_STATE,
+            merchantState: { status: 'INACTIVE', arrivalTime: 0, departureTime: 0, rates: { metal: { buy: 2, sell: 1}, crystal: { buy: 4, sell: 2 }, deuterium: { buy: 6, sell: 3 }}},
+            pirateMercenaryState: { status: 'INACTIVE', fleet: {}, hireCost: 0, arrivalTime: 0, departureTime: 0 },
+            resourceVeinBonus: { active: false, resourceType: null, endTime: 0, bonusMultiplier: 1.25 },
+            ancientArtifactState: { status: 'INACTIVE' },
+            spacePlague: { active: false, infectedShip: null, endTime: 0 },
         };
 
         res.json(gameState);
@@ -139,7 +104,7 @@ app.get('/api/state', async (req: Request, res: Response) => {
     }
 });
 
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (req: express.Request, res: express.Response) => {
     res.send('Cosmic Lord Backend is running!');
 });
 
