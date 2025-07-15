@@ -1,5 +1,5 @@
 
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 import { alliancesCollection } from '../models/allianceModel';
 import { usersCollection } from '../models/userModel';
 import { Alliance, AllianceFE, AllianceMember } from '../types';
@@ -8,7 +8,7 @@ import { ObjectId } from 'mongodb';
 // @desc    Get all alliances
 // @route   GET /api/alliances
 // @access  Public
-export const getAlliances = async (req: Request, res: Response) => {
+export const getAlliances: RequestHandler = async (req, res) => {
     try {
         const alliances = await alliancesCollection().find({}).toArray();
         const alliancesFE: AllianceFE[] = alliances.map(a => ({
@@ -32,7 +32,7 @@ export const getAlliances = async (req: Request, res: Response) => {
 // @desc    Create a new alliance
 // @route   POST /api/alliances
 // @access  Private
-export const createAlliance = async (req: Request, res: Response) => {
+export const createAlliance: RequestHandler = async (req, res) => {
     const { name, tag } = req.body;
     const user = req.user;
 
@@ -87,7 +87,7 @@ export const createAlliance = async (req: Request, res: Response) => {
 // @desc    Join an alliance
 // @route   POST /api/alliances/:id/join
 // @access  Private
-export const joinAlliance = async (req: Request, res: Response) => {
+export const joinAlliance: RequestHandler = async (req, res) => {
     const user = req.user;
     const allianceId = new ObjectId(req.params.id);
 
@@ -125,7 +125,7 @@ export const joinAlliance = async (req: Request, res: Response) => {
 // @desc    Leave an alliance
 // @route   POST /api/alliances/:id/leave
 // @access  Private
-export const leaveAlliance = async (req: Request, res: Response) => {
+export const leaveAlliance: RequestHandler = async (req, res) => {
     const user = req.user;
     const allianceId = new ObjectId(req.params.id);
 

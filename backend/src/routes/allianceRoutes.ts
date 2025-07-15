@@ -1,5 +1,5 @@
 
-import express, { Request, Response } from 'express';
+import express, { RequestHandler } from 'express';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { createAlliance, getAlliances, joinAlliance, leaveAlliance } from '../controllers/allianceController';
 
@@ -11,8 +11,11 @@ router.post('/:id/join', authMiddleware, joinAlliance);
 router.post('/:id/leave', authMiddleware, leaveAlliance);
 
 // Placeholder for chat - to be implemented
-router.get('/:id/chat', authMiddleware, (req: Request, res: Response) => res.json([]));
-router.post('/:id/chat', authMiddleware, (req: Request, res: Response) => res.json({}));
+const getChatHandler: RequestHandler = (req, res) => res.json([]);
+const postChatHandler: RequestHandler = (req, res) => res.json({});
+
+router.get('/:id/chat', authMiddleware, getChatHandler);
+router.post('/:id/chat', authMiddleware, postChatHandler);
 
 
 export default router;

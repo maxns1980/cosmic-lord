@@ -1,5 +1,5 @@
 
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -31,7 +31,7 @@ const startServer = async () => {
     app.use('/api/alliances', allianceRoutes);
 
 
-    app.get('/api/state', authMiddleware, async (req: Request, res: Response) => {
+    const getStateHandler: express.RequestHandler = async (req, res) => {
         try {
             const user = req.user;
             if (!user || !user._id) {
@@ -105,7 +105,8 @@ const startServer = async () => {
             console.error('Error fetching game state:', error);
             res.status(500).json({ message: 'Server error while fetching game state.' });
         }
-    });
+    };
+    app.get('/api/state', authMiddleware, getStateHandler);
 
     // --- Serve Frontend ---
     // The server file is in `backend/dist`, so we need to go up two levels to reach the project root.
@@ -113,21 +114,22 @@ const startServer = async () => {
     
     // Serve static files from the root of the project
     app.use(express.static(frontendPath, {
-        setHeaders: (res: Response, filePath: string) => {
+        setHeaders: (res, filePath) => {
             if (path.extname(filePath) === '.ts' || path.extname(filePath) === '.tsx') {
                 res.setHeader('Content-Type', 'application/javascript');
             }
         }
     }));
     
-    // For any route that doesn't match an API route or a static file,
-    // serve the index.html file. This is for the React SPA.
-    app.get('*', (req: Request, res: Response, next: NextFunction) => {
+    const finalHandler: express.RequestHandler = (req, res, next) => {
         if (req.path.startsWith('/api/')) {
             return next();
         }
         res.sendFile(path.resolve(frontendPath, 'index.html'));
-    });
+    };
+    // For any route that doesn't match an API route or a static file,
+    // serve the index.html file. This is for the React SPA.
+    app.get('*', finalHandler);
 
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
