@@ -21,6 +21,17 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #6b7280; /* gray-500 */
         }
+        .pulse-glow {
+            animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 5px #a78bfa, 0 0 10px #a78bfa, 0 0 15px #a78bfa;
+            }
+            50% {
+                box-shadow: 0 0 10px #c4b5fd, 0 0 20px #c4b5fd, 0 0 30px #c4b5fd;
+            }
+        }
     </style>
 <script type="importmap">
 {
@@ -35,7 +46,8 @@
     "process": "https://esm.sh/process@^0.11.10",
     "jsonwebtoken": "https://esm.sh/jsonwebtoken@^9.0.2",
     "bcryptjs": "https://esm.sh/bcryptjs@^3.0.2",
-    "path": "https://esm.sh/path@^0.12.7"
+    "path": "https://esm.sh/path@^0.12.7",
+    "@google/genai": "https://esm.sh/@google/genai"
   }
 }
 </script>
@@ -43,7 +55,7 @@
 </head>
 <body class="bg-gray-900 text-gray-200 font-sans antialiased">
     <div id="root"></div>
-    <script type="text/babel" data-type="module" src="/index.tsx"></script>
+    <script type="text/babel" data-type="module" data-presets="react,typescript" src="/index.tsx"></script>
 <script type="module" src="/index.tsx"></script>
 </body>
 </html>
