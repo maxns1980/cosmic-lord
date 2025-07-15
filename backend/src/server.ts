@@ -1,6 +1,7 @@
-import express, { Request as ExpressRequest, Response as ExpressResponse } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { connectDB, db } from './config/db';
 import { GameState, FleetMission, Message, MerchantStatus, PirateMercenaryStatus, AncientArtifactStatus } from './types';
 import { 
@@ -29,7 +30,7 @@ const startServer = async () => {
     app.use('/api/alliances', allianceRoutes);
 
 
-    app.get('/api/state', authMiddleware, async (req: ExpressRequest, res: ExpressResponse) => {
+    app.get('/api/state', authMiddleware, async (req: Request, res: Response) => {
         try {
             const user = req.user;
             if (!user || !user._id) {
@@ -105,8 +106,19 @@ const startServer = async () => {
         }
     });
 
-    app.get('/', (req: ExpressRequest, res: ExpressResponse) => {
-        res.send('Cosmic Lord Backend is running!');
+    // --- Serve Frontend ---
+    const frontendPath = path.join(__dirname, '..', '..', '..');
+    
+    // Serve static files from the root of the project
+    app.use(express.static(frontendPath));
+    
+    // For any route that doesn't match an API route or a static file,
+    // serve the index.html file. This is for the React SPA.
+    app.get('*', (req: Request, res: Response, next: NextFunction) => {
+        if (req.path.startsWith('/api/')) {
+            return next();
+        }
+        res.sendFile(path.resolve(frontendPath, 'index.html'));
     });
 
     app.listen(PORT, () => {
