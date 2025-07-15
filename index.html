@@ -21,33 +21,19 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #6b7280; /* gray-500 */
         }
-        .pulse-glow {
-            animation: pulse-glow 2s infinite;
-        }
-        @keyframes pulse-glow {
-            0%, 100% {
-                box-shadow: 0 0 5px #a78bfa, 0 0 10px #a78bfa, 0 0 15px #a78bfa;
-            }
-            50% {
-                box-shadow: 0 0 10px #c4b5fd, 0 0 20px #c4b5fd, 0 0 30px #c4b5fd;
-            }
-        }
     </style>
 <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.1.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
     "express": "https://esm.sh/express@^5.1.0",
     "mongodb": "https://esm.sh/mongodb@^6.17.0",
     "cors": "https://esm.sh/cors@^2.8.5",
     "dotenv": "https://esm.sh/dotenv@^17.2.0",
-    "process": "https://esm.sh/process@^0.11.10",
     "jsonwebtoken": "https://esm.sh/jsonwebtoken@^9.0.2",
     "bcryptjs": "https://esm.sh/bcryptjs@^3.0.2",
-    "path": "https://esm.sh/path@^0.12.7",
-    "@google/genai": "https://esm.sh/@google/genai"
+    "path": "https://esm.sh/path@^0.12.7"
   }
 }
 </script>

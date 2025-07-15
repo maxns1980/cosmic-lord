@@ -37,8 +37,6 @@ import AncientArtifactModal from './components/AncientArtifactModal.tsx';
 import InfoModal from './components/InfoModal.tsx';
 import EncyclopediaModal from './components/EncyclopediaModal.tsx';
 import InventoryModal from './components/InventoryModal.tsx';
-import AdvisorModal from './components/AdvisorModal.tsx';
-import { GoogleGenAI } from '@google/genai';
 
 // --- State Persistence ---
 const SAVE_GAME_KEY = 'cosmic-lord-game-state';
@@ -380,9 +378,6 @@ function App() {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isEncyclopediaOpen, setIsEncyclopediaOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
-  const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
-  const [advisorResponse, setAdvisorResponse] = useState('');
-  const [isAdvisorLoading, setIsAdvisorLoading] = useState(false);
 
   const showNotification = useCallback((message: string) => {
     setNotification(message);
@@ -816,88 +811,6 @@ const handleActivateBoost = useCallback((boostId: string) => {
     showNotification(`Bonus "${getBoostNameForNotif(boostToActivate)}" został aktywowany!`);
     setIsInventoryOpen(false);
 }, [inventory, activeBoosts, showNotification, activeCostReduction, buildQueue, resources, credits, maxResources]);
-
-const createAdvisorPrompt = (question: string, gameState: Partial<GameState>): string => {
-    const { resources, buildings, research, fleet, defenses, credits } = gameState;
-
-    const buildingSummary = buildings ? Object.entries(buildings)
-        .filter(([, level]) => level > 0)
-        .map(([name, level]) => `${name.replace(/_/g, ' ')} (Lvl ${level})`)
-        .join(', ') : 'None';
-
-    const researchSummary = research ? Object.entries(research)
-        .filter(([, level]) => level > 0)
-        .map(([name, level]) => `${name.replace(/_/g, ' ')} (Lvl ${level})`)
-        .join(', ') : 'None';
-
-    const fleetSummary = fleet ? Object.entries(fleet)
-        .filter(([, count]) => count && count > 0)
-        .map(([name, count]) => `${count}x ${name.replace(/_/g, ' ')}`)
-        .join(', ') : 'None';
-
-    const defenseSummary = defenses ? Object.entries(defenses)
-        .filter(([, count]) => count && count > 0)
-        .map(([name, count]) => `${count}x ${name.replace(/_/g, ' ')}`)
-        .join(', ') : 'None';
-
-    return `
-System: You are an expert advisor for a space strategy game called 'Cosmic Lord'. Your advice should be concise, strategic, and easy for a beginner to understand. The player has provided their current status. Analyze it and answer their question directly. Do not use markdown formatting. Respond in Polish.
-
-Player Status:
-- Resources: Metal: ${formatNumber(resources?.metal || 0)}, Crystal: ${formatNumber(resources?.crystal || 0)}, Deuterium: ${formatNumber(resources?.deuterium || 0)}
-- Credits: ${formatNumber(credits || 0)}
-- Buildings: ${buildingSummary || 'None'}
-- Research: ${researchSummary || 'None'}
-- Fleet: ${fleetSummary || 'None'}
-- Defenses: ${defenseSummary || 'None'}
-
-Question: ${question}
-`;
-};
-
-const handleAskAdvisor = useCallback(async (question: string) => {
-    if (!process.env.API_KEY) {
-        setAdvisorResponse("AI Advisor is not configured. API_KEY is missing.");
-        return;
-    }
-
-    setIsAdvisorLoading(true);
-    setAdvisorResponse('');
-
-    try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        
-        const gameStateForPrompt = {
-            resources,
-            buildings,
-            research,
-            fleet,
-            defenses,
-            credits,
-        };
-        
-        const prompt = createAdvisorPrompt(question, gameStateForPrompt);
-
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: {
-                temperature: 0.7,
-                topP: 0.9,
-                topK: 40,
-            }
-        });
-
-        setAdvisorResponse(response.text);
-
-    } catch (error) {
-        console.error("Gemini API error:", error);
-        setAdvisorResponse("Przepraszam, Doradca AI ma problemy techniczne. Spróbuj ponownie później.");
-    } finally {
-        setIsAdvisorLoading(false);
-    }
-}, [resources, buildings, research, fleet, defenses, credits]);
-
 
   // Main Game Tick
   useEffect(() => {
@@ -1905,13 +1818,6 @@ const handleAskAdvisor = useCallback(async (question: string) => {
 
   return (
     <div className="min-h-screen bg-gray-900 bg-cover bg-center bg-fixed" style={{backgroundImage: "url('https://picsum.photos/seed/galaxy/1920/1080')"}}>
-      <AdvisorModal
-          isOpen={isAdvisorOpen}
-          onClose={() => setIsAdvisorOpen(false)}
-          onAsk={handleAskAdvisor}
-          response={advisorResponse}
-          isLoading={isAdvisorLoading}
-      />
       {isInfoModalOpen && <InfoModal onClose={() => setIsInfoModalOpen(false)} />}
       {isEncyclopediaOpen && <EncyclopediaModal onClose={() => setIsEncyclopediaOpen(false)} />}
       {isInventoryOpen && <InventoryModal inventory={inventory} onActivateBoost={handleActivateBoost} onClose={() => setIsInventoryOpen(false)} />}
@@ -1966,14 +1872,6 @@ const handleAskAdvisor = useCallback(async (question: string) => {
            </footer>
         </main>
       </div>
-      <button
-        onClick={() => setIsAdvisorOpen(true)}
-        className="fixed bottom-6 right-6 bg-purple-600 text-white w-16 h-16 rounded-full flex items-center justify-center text-4xl shadow-lg hover:bg-purple-500 transition-transform transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-75 pulse-glow"
-        aria-label="Open AI Advisor"
-        title="AI Advisor"
-      >
-        🧠
-      </button>
     </div>
   );
 }
