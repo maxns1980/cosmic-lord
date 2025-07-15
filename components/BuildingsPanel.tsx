@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { BuildingType, Resources, BuildingLevels, QueueItem, ResearchLevels, ResearchType, BuildingCategory } from '../types';
-import { BUILDING_DATA } from '../constants';
-import BuildingRow from './BuildingRow';
+import { BuildingType, Resources, BuildingLevels, QueueItem, ResearchLevels, ResearchType, BuildingCategory } from '../types.ts';
+import { BUILDING_DATA } from '../constants.ts';
+import BuildingRow from './BuildingRow.tsx';
 
 interface BuildingsPanelProps {
   buildings: BuildingLevels;

@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { BuildingType, Resources, QueueItem, BuildingLevels, ResearchLevels, ResearchType, BuildingCategory } from '../types';
-import { BUILDING_DATA, ALL_GAME_OBJECTS, PROTECTED_RESOURCES_FACTOR } from '../constants';
+import { BuildingType, Resources, QueueItem, BuildingLevels, ResearchLevels, ResearchType, BuildingCategory } from '../types.ts';
+import { BUILDING_DATA, ALL_GAME_OBJECTS, PROTECTED_RESOURCES_FACTOR } from '../constants.ts';
 
 interface BuildingRowProps {
   type: BuildingType;

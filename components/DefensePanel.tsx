@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { DefenseType, Resources, ResearchLevels, QueueItem, BuildingLevels, Defenses } from '../types';
-import { DEFENSE_DATA } from '../constants';
-import DefenseRow from './DefenseRow';
+import { DefenseType, Resources, ResearchLevels, QueueItem, BuildingLevels, Defenses } from '../types.ts';
+import { DEFENSE_DATA } from '../constants.ts';
+import DefenseRow from './DefenseRow.tsx';
 
 interface DefensePanelProps {
   research: ResearchLevels;

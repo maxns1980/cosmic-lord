@@ -1,8 +1,8 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { QueueItem, ShipType } from '../types';
-import { ALL_GAME_OBJECTS, SHIPYARD_DATA } from '../constants';
+import { QueueItem, ShipType } from '../types.ts';
+import { ALL_GAME_OBJECTS, SHIPYARD_DATA } from '../constants.ts';
 
 interface QueuePanelProps {
     queue: QueueItem[];

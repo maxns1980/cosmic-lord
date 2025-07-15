@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { alliancesCollection } from '../models/allianceModel';
 import { usersCollection } from '../models/userModel';
 import { Alliance, AllianceFE, AllianceMember } from '../types';

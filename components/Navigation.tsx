@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { View, MerchantState, MerchantStatus } from '../types';
+import { View, MerchantState, MerchantStatus } from '../types.ts';
 
 interface NavigationProps {
     activeView: View;

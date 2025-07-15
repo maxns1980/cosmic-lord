@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Resources, ResourceVeinBonus, Inventory, ActiveBoosts, BoostType, NPCFleetMission } from '../types';
+import { Resources, ResourceVeinBonus, Inventory, ActiveBoosts, BoostType, NPCFleetMission } from '../types.ts';
 
 interface HeaderProps {
     resources: Resources;

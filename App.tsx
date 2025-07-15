@@ -11,7 +11,7 @@ import {
     ExpeditionMessage, ExpeditionOutcomeType, CombatStats,
     Colony, ColonizationMessage,
     Inventory, ActiveBoosts, BoostType, Boost, ExplorationMessage, ExplorationOutcomeType
-} from './types';
+} from './types.ts';
 import { 
     INITIAL_RESOURCES, INITIAL_BUILDING_LEVELS, INITIAL_RESEARCH_LEVELS, INITIAL_FLEET, INITIAL_DEFENSES, 
     BUILDING_DATA, RESEARCH_DATA, SHIPYARD_DATA, DEFENSE_DATA, TICK_INTERVAL, ALL_GAME_OBJECTS, INITIAL_MERCHANT_STATE, 
@@ -19,24 +19,24 @@ import {
     DEBRIS_FIELD_RECOVERY_RATE, PLAYER_HOME_COORDS, PROTECTED_RESOURCES_FACTOR, INITIAL_PIRATE_MERCENARY_STATE, 
     INITIAL_RESOURCE_VEIN_BONUS, INITIAL_ANCIENT_ARTIFACT_STATE, INITIAL_SPACE_PLAGUE_STATE, INITIAL_COLONIES, COLONY_INCOME_BONUS_PER_HOUR,
     INITIAL_INVENTORY, INITIAL_ACTIVE_BOOSTS
-} from './constants';
-import Header from './components/Header';
-import BuildingsPanel from './components/BuildingsPanel';
-import ResearchPanel from './components/ResearchPanel';
-import ShipyardPanel from './components/ShipyardPanel';
-import DefensePanel from './components/DefensePanel';
-import FleetPanel from './components/FleetPanel';
-import MessagesPanel from './components/MessagesPanel';
-import { MerchantPanel } from './components/MerchantPanel';
-import Navigation from './components/Navigation';
-import QueuePanel from './components/QueuePanel';
-import GalaxyPanel from './components/GalaxyPanel';
-import FleetUpgradesPanel from './components/FleetUpgradesPanel';
-import PirateMercenaryPanel from './components/PirateMercenaryPanel';
-import AncientArtifactModal from './components/AncientArtifactModal';
-import InfoModal from './components/InfoModal';
-import EncyclopediaModal from './components/EncyclopediaModal';
-import InventoryModal from './components/InventoryModal';
+} from './constants.ts';
+import Header from './components/Header.tsx';
+import BuildingsPanel from './components/BuildingsPanel.tsx';
+import ResearchPanel from './components/ResearchPanel.tsx';
+import ShipyardPanel from './components/ShipyardPanel.tsx';
+import DefensePanel from './components/DefensePanel.tsx';
+import { FleetPanel } from './components/FleetPanel.tsx';
+import MessagesPanel from './components/MessagesPanel.tsx';
+import { MerchantPanel } from './components/MerchantPanel.tsx';
+import Navigation from './components/Navigation.tsx';
+import QueuePanel from './components/QueuePanel.tsx';
+import GalaxyPanel from './components/GalaxyPanel.tsx';
+import FleetUpgradesPanel from './components/FleetUpgradesPanel.tsx';
+import PirateMercenaryPanel from './components/PirateMercenaryPanel.tsx';
+import AncientArtifactModal from './components/AncientArtifactModal.tsx';
+import InfoModal from './components/InfoModal.tsx';
+import EncyclopediaModal from './components/EncyclopediaModal.tsx';
+import InventoryModal from './components/InventoryModal.tsx';
 
 // --- State Persistence ---
 const SAVE_GAME_KEY = 'cosmic-lord-game-state';
@@ -1818,7 +1818,7 @@ const handleActivateBoost = useCallback((boostId: string) => {
 
   return (
     <div className="min-h-screen bg-gray-900 bg-cover bg-center bg-fixed" style={{backgroundImage: "url('https://picsum.photos/seed/galaxy/1920/1080')"}}>
-      {isInfoModalOpen && <InfoModal onClose={() => setIsInfoModalOpen(false)} />}
+      {isInfoModalOpen && <InfoModal onClose={() => setIsInfoModalOpen(true)} />}
       {isEncyclopediaOpen && <EncyclopediaModal onClose={() => setIsEncyclopediaOpen(false)} />}
       {isInventoryOpen && <InventoryModal inventory={inventory} onActivateBoost={handleActivateBoost} onClose={() => setIsInventoryOpen(false)} />}
       {ancientArtifactState.status === AncientArtifactStatus.AWAITING_CHOICE && (

@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { usersCollection } from '../models/userModel';
@@ -14,6 +14,7 @@ import {
     INITIAL_ACTIVE_BOOSTS,
     PLAYER_HOME_COORDS
 } from '../constants';
+import { User } from '../types';
 
 // Generate JWT
 const generateToken = (id: string) => {
@@ -44,7 +45,7 @@ export const registerUser = async (req: Request, res: Response) => {
     const passwordHash = await bcrypt.hash(password, salt);
 
     // Create user
-    const newUserDoc = {
+    const newUserDoc: Omit<User, '_id'> = {
         username,
         email,
         passwordHash,

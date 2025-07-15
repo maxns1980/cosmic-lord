@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { ShipType, Resources, BuildingLevels, ResearchLevels, BuildingType, ResearchType } from '../types';
-import { SHIPYARD_DATA, ALL_GAME_OBJECTS } from '../constants';
+import { ShipType, Resources, BuildingLevels, ResearchLevels, BuildingType, ResearchType } from '../types.ts';
+import { SHIPYARD_DATA, ALL_GAME_OBJECTS } from '../constants.ts';
 
 interface ShipRowProps {
   type: ShipType;

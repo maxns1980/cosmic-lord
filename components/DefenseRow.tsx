@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { DefenseType, Resources, BuildingLevels, ResearchLevels, BuildingType, ResearchType } from '../types';
-import { DEFENSE_DATA, ALL_GAME_OBJECTS } from '../constants';
+import { DefenseType, Resources, BuildingLevels, ResearchLevels, BuildingType, ResearchType } from '../types.ts';
+import { DEFENSE_DATA, ALL_GAME_OBJECTS } from '../constants.ts';
 
 interface DefenseRowProps {
   type: DefenseType;

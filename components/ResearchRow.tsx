@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { ResearchType, Resources, QueueItem, BuildingLevels, ResearchLevels, BuildingType } from '../types';
-import { RESEARCH_DATA, ALL_GAME_OBJECTS } from '../constants';
+import { ResearchType, Resources, QueueItem, BuildingLevels, ResearchLevels, BuildingType } from '../types.ts';
+import { RESEARCH_DATA, ALL_GAME_OBJECTS } from '../constants.ts';
 
 interface ResearchRowProps {
   type: ResearchType;

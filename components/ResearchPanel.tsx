@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { ResearchType, Resources, ResearchLevels, QueueItem, BuildingLevels } from '../types';
-import { RESEARCH_DATA, BUILDING_DATA } from '../constants';
-import ResearchRow from './ResearchRow';
+import { ResearchType, Resources, ResearchLevels, QueueItem, BuildingLevels } from '../types.ts';
+import { RESEARCH_DATA, BUILDING_DATA } from '../constants.ts';
+import ResearchRow from './ResearchRow.tsx';
 
 interface ResearchPanelProps {
   research: ResearchLevels;
